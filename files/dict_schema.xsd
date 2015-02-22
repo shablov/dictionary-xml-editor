@@ -1,39 +1,39 @@
 <?xml version="1.0"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 
-    <xsd:element name="dict" type="dictType"/>
+	<xsd:element name="dict" type="dictType"/>
 
-    <xsd:complexType name="dictType">
-        <xsd:choice minOccurs="1" maxOccurs="unbounded">
-            <xsd:element name="context" type="contextType"/>
-        </xsd:choice>
-    </xsd:complexType>
+	<xsd:complexType name="dictType">
+		<xsd:choice minOccurs="1" maxOccurs="unbounded">
+			<xsd:element name="context" type="contextType"/>
+		</xsd:choice>
+	</xsd:complexType>
 
-    <xsd:complexType name="contextType">
-        <xsd:choice minOccurs="1" maxOccurs="unbounded">
-            <xsd:element name="string" type="stringType"/>
-            <xsd:element name="enum" type="enumType"/>
-        </xsd:choice>
-        <xsd:attribute name="name_eng" type="xsd:string" use="required"/>
-        <xsd:attribute name="name_rus" type="xsd:string" use="optional"/>
-    </xsd:complexType>
+	<xsd:complexType name="contextType">
+		<xsd:choice minOccurs="1" maxOccurs="unbounded">
+			<xsd:element name="string" type="stringType"/>
+		<xsd:element name="enum" type="enumType"/>
+		</xsd:choice>
+		<xsd:attribute name="name_eng" type="xsd:string" use="required"/>
+		<xsd:attribute name="name_rus" type="xsd:string" use="optional"/>
+	</xsd:complexType>
 
-    <xsd:complexType name="enumType">
-        <xsd:choice minOccurs="1" maxOccurs="unbounded">
-            <xsd:element name="arg" type="argType"/>
-        </xsd:choice>
-        <xsd:attribute name="name_rus" type="xsd:string" use="required"/>
-        <xsd:attribute name="name_eng" type="xsd:string" use="required"/>
-    </xsd:complexType>
+	<xsd:complexType name="enumType">
+		<xsd:choice minOccurs="1" maxOccurs="unbounded">
+			<xsd:element name="arg" type="argType"/>
+		</xsd:choice>
+		<xsd:attribute name="name_rus" type="xsd:string" use="required"/>
+		<xsd:attribute name="name_eng" type="xsd:string" use="required"/>
+	</xsd:complexType>
 
-    <xsd:complexType name="argType">
-        <xsd:attribute name="value" type="xsd:integer" use="required"/>
-        <xsd:attribute name="name_rus" type="xsd:string" use="required"/>
-        <xsd:attribute name="name_eng" type="xsd:string" use="required"/>
-    </xsd:complexType>
+	<xsd:complexType name="argType">
+		<xsd:attribute name="value" type="xsd:integer" use="required"/>
+		<xsd:attribute name="name_rus" type="xsd:string" use="required"/>
+		<xsd:attribute name="name_eng" type="xsd:string" use="required"/>
+	</xsd:complexType>
 
-    <xsd:complexType name="stringType">
-    <xsd:attribute name="name_rus" type="xsd:string" use="required"/>
-    <xsd:attribute name="name_eng" type="xsd:string" use="required"/>
-    </xsd:complexType>
- </xsd:schema>
+	<xsd:complexType name="stringType">
+		<xsd:attribute name="name_rus" type="xsd:string" use="required"/>
+		<xsd:attribute name="name_eng" type="xsd:string" use="required"/>
+	</xsd:complexType>
+</xsd:schema>

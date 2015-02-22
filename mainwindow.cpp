@@ -16,6 +16,8 @@
 #include <QtXmlPatterns/QXmlSchema>
 #include <QtXmlPatterns/QXmlSchemaValidator>
 
+#include "dictionarytreeview.h"
+
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -23,6 +25,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
 	setWindowTitle(tr("Dictionary editor"));
 	setWindowIcon(QIcon(":images/dictionary"));
+	setMinimumWidth(520);
+	setMinimumHeight(400);
 
 	createAction();
 	createMenuBar();
@@ -195,7 +199,8 @@ void MainWindow::createSearchTool(QToolBar *toolBar)
 	searchLineEdit = new QLineEdit();
 	searchLineEdit->setPlaceholderText(tr("Quick search(Ctrl+F)"));
 	toolBar->addWidget(searchLineEdit);
-#ifdef QT_5_2
+    qDebug() << qVersion();
+#if QT_VERSION >= 0x050300
 	searchLineEdit->addAction(actionSearch, QLineEdit::TrailingPosition);
 #else
 	searchLineEdit->setStyleSheet(QString("QLineEdit"
@@ -232,8 +237,7 @@ void MainWindow::createSortTool(QToolBar *toolBar)
 
 void MainWindow::createDictionaryView()
 {
-	QTreeView *treeView = new QTreeView;
-	/// TODO: установка модели в дерево
+	DictionaryTreeView *treeView = new DictionaryTreeView(this);
 	setCentralWidget(treeView);
 }
 
@@ -253,7 +257,11 @@ void MainWindow::onOpenFile()
 	}
 
 	qDebug() << Q_FUNC_INFO << "Xml dict is valid";
-	/// TODO: загрузка в модель дерева корректного xml словаря
+	DictionaryTreeView *treeView = qobject_cast<DictionaryTreeView*>(centralWidget());
+	if (treeView)
+	{
+		treeView->loadFromFile(mFileName);
+	}
 }
 
 bool MainWindow::setFileName(const QString &fileName)

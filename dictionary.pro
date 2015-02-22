@@ -7,7 +7,6 @@
 QT       += core gui xml xmlpatterns
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-greaterThan(QT_MAJOR_VERSION, 5_2): DEFINES += QT_5_2
 
 TEMPLATE = app
 TARGET = bin/dictionary
@@ -17,9 +16,15 @@ OBJECTS_DIR = obj
 RCC_DIR = obj
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    dictionarytreeview.cpp \
+    dictionarymodel.cpp \
+    dictionaryitem.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    dictionarytreeview.h \
+    dictionarymodel.h \
+    dictionaryitem.h
 
 RESOURCES += \
     resources.qrc
