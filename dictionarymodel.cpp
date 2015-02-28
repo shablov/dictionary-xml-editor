@@ -70,6 +70,16 @@ DictionaryItem *DictionaryModel::itemForIndex(const QModelIndex &index) const
 	return rootItem;
 }
 
+void DictionaryModel::reset()
+{
+#if QT_VERSION >= 050000
+	beginResetModel();
+	endResetModel();
+#else
+	QAbstractItemModel::reset();
+#endif
+}
+
 
 QModelIndex DictionaryModel::index(int row, int column, const QModelIndex &parent) const
 {
@@ -232,6 +242,15 @@ QVariant DictionaryModel::headerData(int section, Qt::Orientation orientation, i
 	}
 }
 
+bool DictionaryModel::insertRows(int row, int count, const QModelIndex &parent)
+{
+	return QAbstractItemModel::insertRows(row, count, parent);
+}
+
+bool DictionaryModel::removeRows(int row, int count, const QModelIndex &parent)
+{
+	return QAbstractItemModel::removeRows(row, count, parent);
+}
 
 Qt::ItemFlags DictionaryModel::flags(const QModelIndex &index) const
 {

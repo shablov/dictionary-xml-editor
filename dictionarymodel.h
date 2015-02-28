@@ -29,7 +29,8 @@ private:
 	};
 	DictionaryItem *rootItem;
 
-
+protected:
+	void reset();
 
 	// QAbstractItemModel interface
 public:
@@ -40,10 +41,8 @@ public:
 	virtual QVariant data(const QModelIndex &index, int role) const;
 	virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
 	virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
-//	virtual bool insertRows(int row, int count, const QModelIndex &parent);
-//	virtual bool insertColumns(int column, int count, const QModelIndex &parent);
-//	virtual bool removeRows(int row, int count, const QModelIndex &parent);
-//	virtual bool removeColumns(int column, int count, const QModelIndex &parent);
+	virtual bool insertRows(int row, int count, const QModelIndex &parent);
+	virtual bool removeRows(int row, int count, const QModelIndex &parent);
 	virtual Qt::ItemFlags flags(const QModelIndex &index) const;
 };
 
