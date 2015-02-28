@@ -17,6 +17,10 @@
         <file alias="exit">images/on_off_icon.png</file>
         <file alias="drag_arrow">images/cursor_drag_arrow_icon.png</file>
         <file alias="search">images/zoom_icon.png</file>
+        <file alias="enum">images/enum.png</file>
+        <file alias="string">images/string.png</file>
+        <file alias="argument">images/argument.png</file>
+        <file alias="context">images/context.png</file>
     </qresource>
     <qresource prefix="/files">
         <file alias="xsd_schema">files/dict_schema.xsd</file>

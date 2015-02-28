@@ -8,6 +8,7 @@
 #include <QLineEdit>
 #include <QMenu>
 #include <QMenuBar>
+#include <QMessageBox>
 #include <QToolBar>
 #include <QToolButton>
 #include <QTreeView>
@@ -266,9 +267,7 @@ void MainWindow::onOpenFile()
 
 bool MainWindow::setFileName(const QString &fileName)
 {
-	if ((fileName.isEmpty()) ||
-			(fileName == mFileName) ||
-			(!QFile::exists(fileName)))
+	if ((fileName.isEmpty()) || (!QFile::exists(fileName)))
 	{
 		return false;
 	}
@@ -278,6 +277,24 @@ bool MainWindow::setFileName(const QString &fileName)
 	}
 	mFileName = fileName;
 	return true;
+}
+
+void MainWindow::saveToFile(const QString &fileName)
+{
+	DictionaryTreeView *treeView = qobject_cast<DictionaryTreeView*>(centralWidget());
+	if (fileName.isEmpty() || !treeView)
+	{
+		return;
+	}
+	bool saveOk = treeView->saveToFile(fileName);
+	if (!saveOk)
+	{
+		/// TODO: сделать QMessageBox кросс платворменным
+		QMessageBox::critical(this, tr("Error"), tr("Can't save to file ") + fileName);
+		return;
+	}
+
+	setFileName(fileName);
 }
 
 bool MainWindow::maybeSave()
@@ -320,22 +337,30 @@ void MainWindow::onNewFile()
 	}
 
 	mFileName.clear();
-	/// TODO: установить новый пустой файл в модель
-}
 
-bool MainWindow::onSaveFile()
-{
-	if ((mFileName.isEmpty()) || (!QFile::exists(mFileName)))
+	DictionaryTreeView *treeView = qobject_cast<DictionaryTreeView*>(centralWidget());
+	if (treeView)
 	{
-		return onSaveAs();
+		treeView->newFile();
 	}
-	/// TODO: сохранение данных из модели в файл
-	return true;
 }
 
-bool MainWindow::onSaveAs()
+void MainWindow::onSaveFile()
 {
-	/// TODO: сделать сохранение в выбранный файл
-	return true;
+	if (mFileName.isEmpty())
+	{
+		onSaveAs();
+	}
+	else
+	{
+		saveToFile(mFileName);
+	}
+}
+
+void MainWindow::onSaveAs()
+{
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
+													QDir::currentPath(), tr("Xml (*.xml)"));
+	saveToFile(fileName);
 }
 

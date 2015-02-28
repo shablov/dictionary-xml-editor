@@ -14,6 +14,8 @@ public:
 	~DictionaryTreeView();
 
 	void loadFromFile(const QString &fileName);
+	bool saveToFile(const QString &fileName);
+	void newFile();
 
 private:
 	DictionaryModel *pModel;

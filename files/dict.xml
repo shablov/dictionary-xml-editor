@@ -3,7 +3,6 @@
 	<context name_eng="default">
 
 		<string name_rus="ЦПУ" name_eng="window_title"/>
-<!--		Menu-->
 		<string name_rus="Настройки" name_eng="settings"/>
 		<string name_rus="Режим работы" name_eng="work_mode"/>
 		<string name_rus="Режим управления" name_eng="control_mode"/>

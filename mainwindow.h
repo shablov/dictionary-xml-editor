@@ -31,6 +31,8 @@ private:
 
 	bool setFileName(const QString &fileName);
 
+	void saveToFile(const QString &fileName);
+
 private slots:
 	void onOpenFile();
 	bool maybeSave();
@@ -38,8 +40,8 @@ private slots:
 
 	void onNewFile();
 
-	bool onSaveFile();
-	bool onSaveAs();
+	void onSaveFile();
+	void onSaveAs();
 
 
 private:

@@ -4,24 +4,43 @@
 #include <QList>
 #include <QString>
 
-#include <QStandardItem>
+#include <QDomDocument>
+#include <QDomElement>
 
-class QDomElement;
-
-enum DictionaryItemType
-{
-	ContextItem,
-	StringItem,
-	EnumItem,
-	ArgumentItem
-};
-
-class DictionaryItem : public QStandardItem
+class DictionaryItem
 {
 public:
+	enum ItemType
+	{
+		ContextType,
+		StringType,
+		EnumType,
+		ArgType
+	};
+
+	explicit DictionaryItem();
+	explicit DictionaryItem(QString engName, QString rusName);
 	explicit DictionaryItem(const QDomElement &domElement, DictionaryItem *parent);
 	~DictionaryItem();
 
+	QString englishName() const;
+	QString russiaName() const;
+	ItemType type();
+
+	void setEnglishName(const QString &name);
+	void setRussiaName(const QString &name);
+
+	DictionaryItem *childAt(int i) const;
+	int rowOfChild(DictionaryItem *child) const;
+	int childCount() const;
+	void insertChild(const int &i, DictionaryItem *childItem);
+
+	DictionaryItem *parent() const;
+
+	QDomElement toDomElement(QDomDocument &domDocument) const;
+	QDomDocument toDomDocument() const;
+
+private:
 	QString tagName;
 
 	DictionaryItem *parentItem;
@@ -29,7 +48,7 @@ public:
 
 	QString engName;
 	QString rusName;
-	quint8 enumId;
+	qint8 enumId;
 };
 
 #endif // DICTIONARYITEM_H
