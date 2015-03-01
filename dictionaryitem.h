@@ -19,13 +19,13 @@ public:
 	};
 
 	explicit DictionaryItem();
-	explicit DictionaryItem(QString engName, QString rusName);
+	explicit DictionaryItem(ItemType type, DictionaryItem *parent);
 	explicit DictionaryItem(const QDomElement &domElement, DictionaryItem *parent);
 	~DictionaryItem();
 
 	QString englishName() const;
 	QString russiaName() const;
-	ItemType type();
+	ItemType type() const;
 
 	void setEnglishName(const QString &name);
 	void setRussiaName(const QString &name);
@@ -39,6 +39,7 @@ public:
 
 	QDomElement toDomElement(QDomDocument &domDocument) const;
 	QDomDocument toDomDocument() const;
+	void setElementAttributes(QDomElement &domElement) const;
 
 private:
 	QString tagName;
@@ -48,7 +49,6 @@ private:
 
 	QString engName;
 	QString rusName;
-	qint8 enumId;
 };
 
 #endif // DICTIONARYITEM_H

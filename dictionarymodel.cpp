@@ -6,6 +6,8 @@
 #include <QFile>
 
 #include <QDebug>
+#include <QXmlSchema>
+#include <QXmlSchemaValidator>
 
 DictionaryModel::DictionaryModel(QObject *parent) :
 	QAbstractItemModel(parent), rootItem(0)
@@ -17,36 +19,50 @@ DictionaryModel::~DictionaryModel()
 	delete rootItem;
 }
 
-void DictionaryModel::load(const QString &fileName)
+bool DictionaryModel::load(const QString &fileName)
 {
 	QFile file(fileName);
 	if (!file.open(QIODevice::ReadOnly))
 	{
-		return;
+		return false;
+	}
+	QByteArray data = file.readAll();
+	file.close();
+
+	if (!validate(data))
+	{
+		return false;
 	}
 	QDomDocument doc("dictionary");
-	if (!doc.setContent(&file))
+	if (!doc.setContent(data))
 	{
-		file.close();
-		return;
+		return false;
 	}
-	file.close();
 
 	QDomElement rootElement = doc.documentElement();
 	rootItem = new DictionaryItem(rootElement, 0);
 	reset();
+	return true;
 }
 
 bool DictionaryModel::save(const QString &fileName)
 {
-	QFile file(fileName);
-	if (!file.open(QIODevice::WriteOnly) || !rootItem)
+	if (!rootItem)
 	{
 		return false;
 	}
 	QDomDocument doc = rootItem->toDomDocument();
-	QByteArray data = doc.toByteArray();
-	file.write("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" + data);
+	QByteArray data = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" + doc.toByteArray();
+	if (!validate(data))
+	{
+		return false;
+	}
+	QFile file(fileName);
+	if (!file.open(QIODevice::WriteOnly))
+	{
+		return false;
+	}
+	file.write(data);
 	return true;
 }
 
@@ -55,6 +71,49 @@ void DictionaryModel::clear()
 	delete rootItem;
 	rootItem = 0;
 	reset();
+}
+
+void DictionaryModel::createNew()
+{
+	if (rootItem)
+	{
+		clear();
+	}
+	rootItem = new DictionaryItem;
+}
+
+bool DictionaryModel::validate(const QByteArray &data)
+{
+	QFile file(":/files/xsd_schema");
+	if (!file.open(QIODevice::ReadOnly))
+	{
+		qDebug() << "Can't open schema file";
+		/// TODO: сделать обработчик ошибок
+		emit schemaNotExists();
+		return false;
+	}
+	QXmlSchema schema;
+	if (!schema.load(file.readAll()))
+	{
+		qDebug() << "Schema is invalid";
+		/// TODO: сделать обработчик ошибок
+		emit invalidSchema();
+		return false;
+	}
+
+	QXmlSchemaValidator validator(schema);
+	bool isValid = validator.validate(data);
+	if (!isValid)
+	{
+		/// TODO: сделать обработчик ошибок
+		emit invalidXml();
+	}
+	return isValid;
+}
+
+bool DictionaryModel::isModified()
+{
+	return false;
 }
 
 DictionaryItem *DictionaryModel::itemForIndex(const QModelIndex &index) const

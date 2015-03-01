@@ -13,12 +13,21 @@ public:
 	DictionaryModel(QObject *parent = 0);
 	~DictionaryModel();
 
-	void load(const QString &fileName);
+	bool load(const QString &fileName);
 	bool save(const QString &fileName);
 	void clear();
+	void createNew();
+
+	bool validate(const QByteArray &data);
+	bool isModified();
 
 private:
 	DictionaryItem *itemForIndex(const QModelIndex &index) const;
+
+signals:
+	void schemaNotExists();
+	void invalidSchema();
+	void invalidXml();
 
 private:
 	enum Columns

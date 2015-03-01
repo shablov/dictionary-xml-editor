@@ -4,14 +4,36 @@
 
 
 DictionaryItem::DictionaryItem() :
-	tagName("context"), engName("default"), rusName("cтандартный"), enumId(-1)
+	tagName("dict"), engName(QString()), rusName(QString())
 {
 }
 
-DictionaryItem::DictionaryItem(QString engName, QString rusName) :
-	tagName("string"), engName(engName), rusName(rusName), enumId(-1)
+DictionaryItem::DictionaryItem(ItemType type, DictionaryItem *parent) : parentItem(parent)
 {
-
+	switch (type) {
+		case DictionaryItem::ContextType:
+		{
+			tagName = "context";
+			break;
+		}
+		case DictionaryItem::StringType:
+		{
+			tagName = "string";
+			break;
+		}
+		case DictionaryItem::EnumType:
+		{
+			tagName = "enum";
+			break;
+		}
+		case DictionaryItem::ArgType:
+		{
+			tagName = "arg";
+			break;
+		}
+		default:
+			break;
+	}
 }
 
 DictionaryItem::DictionaryItem(const QDomElement &domElement, DictionaryItem *parent)
@@ -20,8 +42,6 @@ DictionaryItem::DictionaryItem(const QDomElement &domElement, DictionaryItem *pa
 	tagName = domElement.tagName();
 	rusName = domElement.attribute("name_rus", QString());
 	engName = domElement.attribute("name_eng", QString());
-	QString value = domElement.attribute("value", QString("-1"));
-	enumId = static_cast<qint8>(value.toInt());
 
 	QDomNodeList childNodes = domElement.childNodes();
 	for (int i = 0; i < childNodes.count(); i++)
@@ -48,7 +68,7 @@ QString DictionaryItem::russiaName() const
 	return rusName;
 }
 
-DictionaryItem::ItemType DictionaryItem::type()
+DictionaryItem::ItemType DictionaryItem::type() const
 {
 	if (tagName == "enum")
 	{
@@ -104,9 +124,8 @@ DictionaryItem *DictionaryItem::parent() const
 	return parentItem;
 }
 
-QDomElement DictionaryItem::toDomElement(QDomDocument &domDocument) const
+void DictionaryItem::setElementAttributes(QDomElement &domElement) const
 {
-	QDomElement domElement = domDocument.createElement(tagName);
 	if (!engName.isEmpty())
 	{
 		domElement.setAttribute("name_eng", engName);
@@ -115,14 +134,21 @@ QDomElement DictionaryItem::toDomElement(QDomDocument &domDocument) const
 	{
 		domElement.setAttribute("name_rus", rusName);
 	}
-	if (enumId != -1)
-	{
-		domElement.setAttribute("value", enumId);
-	}
+}
+
+QDomElement DictionaryItem::toDomElement(QDomDocument &domDocument) const
+{
+	QDomElement domElement = domDocument.createElement(tagName);
+	setElementAttributes(domElement);
 	for (int i = 0; i < childItems.count(); i++)
 	{
 		const DictionaryItem *childItem = childItems.at(i);
-		domElement.appendChild(childItem->toDomElement(domDocument));
+		QDomElement childElement = childItem->toDomElement(domDocument);
+		if (childItem->type() == ArgType)
+		{
+			childElement.setAttribute("value", i);
+		}
+		domElement.appendChild(childElement);
 	}
 	return domElement;
 }
@@ -130,24 +156,8 @@ QDomElement DictionaryItem::toDomElement(QDomDocument &domDocument) const
 QDomDocument DictionaryItem::toDomDocument() const
 {
 	QDomDocument domDocument("dictionary");
-	QDomElement domElement = domDocument.createElement(tagName);
+	QDomElement domElement = toDomElement(domDocument);
+	setElementAttributes(domElement);
 	domDocument.appendChild(domElement);
-	if (!engName.isEmpty())
-	{
-		domElement.setAttribute("name_eng", engName);
-	}
-	if (!rusName.isEmpty())
-	{
-		domElement.setAttribute("name_rus", rusName);
-	}
-	if (enumId != -1)
-	{
-		domElement.setAttribute("value", enumId);
-	}
-	for (int i = 0; i < childItems.count(); i++)
-	{
-		const DictionaryItem *childItem = childItems.at(i);
-		domElement.appendChild(childItem->toDomElement(domDocument));
-	}
 	return domDocument;
 }

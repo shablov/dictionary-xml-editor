@@ -1,176 +1,154 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE dictionary>
 <dict>
-	<context name_eng="default">
-
-		<string name_rus="ЦПУ" name_eng="window_title"/>
-		<string name_rus="Настройки" name_eng="settings"/>
-		<string name_rus="Режим работы" name_eng="work_mode"/>
-		<string name_rus="Режим управления" name_eng="control_mode"/>
-		<string name_rus="Конфигуратор" name_eng="configurator"/>
-
-
-		<string name_rus="Принять" name_eng="accept" />
-		<string name_rus="Отмена" name_eng="cancel" />
-		<string name_rus="Редактировать" name_eng="edit"/>
-		<string name_rus="Удалить" name_eng="remove"/>
-		<string name_rus="Добавить" name_eng="add"/>
-		<string name_rus="Отправить" name_eng="send"/>
-
-		<string name_rus="Текущее время" name_eng="current_time" />
-		<string name_rus="Корабельное время" name_eng="ship_time" />
-		<string name_rus="Московское время" name_eng="moscow_time" />
-		<string name_rus="Время по Гринвичу" name_eng="gmt_time" />
-
-
-		<enum name_rus="Режим работы" name_eng="Env::WorkModes">
-			<arg value="0" name_rus="Тренировка" name_eng="training" />
-			<arg value="1" name_rus="Боевой" name_eng="war" />
-			<arg value="2" name_rus="Повседневный" name_eng="peace" />
-			<arg value="3" name_rus="Регламент" name_eng="regulation" />
-		</enum>
-
-		<enum name_rus="Режим боевой задачи" name_eng="Env::TaskModes">
-			<arg value="0" name_rus="Подготовка" name_eng="preparation" />
-			<arg value="1" name_rus="Адаптация" name_eng="adaptation" />
-			<arg value="2" name_rus="Подавление" name_eng="jamming" />
-		</enum>
-
-		<enum name_rus="Режим управления" name_eng="Env::ControlModes">
-			<arg value="0" name_rus="Автономный" name_eng="local" />
-			<arg value="1" name_rus="Централизованный" name_eng="remote" />
-		</enum>
-
-		<enum name_rus="Статус соединения" name_eng="ConnectionStatus">
-			<arg value="0" name_rus="Есть соединение" name_eng="connected" />
-			<arg value="1" name_rus="Соединение отсутствует" name_eng="not_connected" />
-		</enum>
-
-		<string name_rus="Текущая тактическая обстановка" name_eng="tto" />
-		<string name_rus="Не выбран" name_eng="no_tto_object" />
-		<enum name_rus="Колонки объекта ТТО" name_eng="Tto::Model::Columns">
-			<arg value="0" name_rus="Идентификатор" name_eng="COL_id" />
-			<arg value="1" name_rus="Идентификатор в БИУС" name_eng="COL_biusId" />
-			<arg value="2" name_rus="Идентификатор на карте" name_eng="COL_mapId" />
-			<arg value="3" name_rus="Тип" name_eng="COL_type" />
-			<arg value="4" name_rus="Скорость" name_eng="COL_rate" />
-			<arg value="5" name_rus="Курс" name_eng="COL_course" />
-			<arg value="6" name_rus="Широта" name_eng="COL_latitude" />
-			<arg value="7" name_rus="Долгота" name_eng="COL_longitude" />
-			<arg value="8" name_rus="Число столбцов" name_eng="COL_columnCount" />
-		</enum>
-
-		<enum name_rus="Типы тактических объектов" name_eng="Tto::Object::Types">
-			<arg value="1" name_rus="НК" name_eng="TTO_NK" />
-			<arg value="2" name_rus="ЛА" name_eng="TTO_LA" />
-			<arg value="3" name_rus="БУС" name_eng="TTO_BUS" />
-			<arg value="4" name_rus="ПЛ" name_eng="TTO_PL" />
-		</enum>
-
-		<enum name_rus="Состояния линий связи" name_eng="CommLineState">
-			<arg value="0" name_rus="Неизвестно" name_eng="Unknown" />
-			<arg value="1" name_rus="Обнаружена" name_eng="Detected" />
-			<arg value="2" name_rus="Подавляется" name_eng="Jamming" />
-			<arg value="3" name_rus="Пропала" name_eng="Lost" />
-		</enum>
-
-		<enum name_rus="Колонки таблицы боевого задания" name_eng="CombatTaskModel::Columns">
-			<arg value="0" name_rus="Частота, Гц" name_eng="Frequency" />
-			<arg value="1" name_rus="Полоса, Гц" name_eng="Band" />
-			<arg value="2" name_rus="Модуляция" name_eng="Modulation" />
-			<arg value="3" name_rus="Азимут подавления, °" name_eng="Bearing" />
-			<arg value="4" name_rus="Приоритет" name_eng="Priority" />
-			<arg value="5" name_rus="Число столбцов" name_eng="Size" />
-		</enum>
-		<enum name_rus="Колонки таблицы объектов РЭО" name_eng="ReoModel::Columns">
-			<arg value="0" name_rus="Частота, Гц" name_eng="Frequency" />
-			<arg value="1" name_rus="Полоса, Гц" name_eng="Band" />
-			<arg value="2" name_rus="Модуляция" name_eng="Modulation" />
-			<arg value="3" name_rus="Азимут подавления, °" name_eng="Bearing" />
-			<arg value="4" name_rus="Приоритет" name_eng="Priority" />
-			<arg value="5" name_rus="ПРД" name_eng="Transmitter" />
-			<arg value="6" name_rus="ПРМ" name_eng="Receiver" />
-			<arg value="7" name_rus="Состояние" name_eng="State" />
-			<arg value="8" name_rus="Назначенное средство" name_eng="AppointedAgent" />
-			<arg value="9" name_rus="Число столбцов" name_eng="Size" />
-		</enum>
-
-		<enum name_rus="Колонки оперативного журнала" name_eng="LogModel::Columns">
-		<arg value="0" name_rus="Время" name_eng="LOG_Timestamp" />
-		<arg value="1" name_rus="Тип" name_eng="LOG_Type" />
-		<arg value="2" name_rus="Критичность" name_eng="LOG_Emergency" />
-		<arg value="3" name_rus="Описание" name_eng="LOG_Descr" />
-		<arg value="4" name_rus="Число столбцов" name_eng="LOG_Count" />
-		</enum>
-
-		<enum name_rus="Тип события" name_eng="Event::Type">
-			<arg value = "1007" name_rus="Отладка" name_eng="Debug"/>
-			<arg value = "1006" name_rus="Информация" name_eng="Info"/>
-			<arg value = "1005" name_rus="Уведомление" name_eng="Notice"/>
-			<arg value = "1004" name_rus="Предупреждение" name_eng="Warning"/>
-			<arg value = "1003" name_rus="Ошибка" name_eng="Error"/>
-			<arg value = "1002" name_rus="Критично" name_eng="Critical"/>
-			<arg value = "1001" name_rus="Тревога" name_eng="Alert"/>
-			<arg value = "1000" name_rus="Авария" name_eng="Emergency"/>
-		</enum>
-
-
-		<string name_rus="Выбор пеленга" name_eng="bearing_choice" />
-
-		<string name_rus="Запрещенные сектора" name_eng="forbidden_sectors"/>
-		<string name_rus="Запрещенные частоты" name_eng="forbidden_freqs"/>
-		<string name_rus="Диаграмма" name_eng="diagram"/>
-		<string name_rus="Таблица" name_eng="table"/>
-		<string name_rus="Пересекающиеся сектора" name_eng="intersected_sectors"/>
-		<string name_rus="Начало сектора" name_eng="begin_sector"/>
-		<string name_rus="Конец сектора" name_eng="end_sector"/>
-		<string name_rus="Вы хотите объединить эти сектора?" name_eng="ask_merge_sectors"/>
-		<string name_rus="Ошибка" name_eng="error"/>
-		<string name_rus="Нулевой сектор" name_eng="zero_sector"/>
-		<string name_rus="Начало и конец сектора совпадают." name_eng="zero_sector_error"/>
-		<enum name_rus="Колонки запрещенных секторов" name_eng="Sectors::Model::Columns">
-			<arg value="0" name_rus="Начало" name_eng="begin" />
-			<arg value="1" name_rus="Конец" name_eng="end" />
-			<arg value="2" name_rus="Число столбцов" name_eng="size" />
-		</enum>
-
-		<string name_rus="Расписание работ" name_eng="work_schedule"/>
-		<string name_rus="Происходит перекрытие записей расписания" name_eng="schedule_error"/>
-		<string name_rus="Хотите изменить запись?" name_eng="ask_merge_schedule"/>
-		<string name_rus="Время начала" name_eng="begin_time"/>
-		<string name_rus="Время окончания" name_eng="end_time"/>
-		<string name_rus="Начать немедленно" name_eng="begin_now"/>
-		<string name_rus="До команды" name_eng="until_command"/>
-		<enum name_rus="Колонки расписания работ" name_eng="WorkSchedule::Model::Columns">
-			<arg value="0" name_rus="Режим" name_eng="task" />
-			<arg value="1" name_rus="Начало" name_eng="begin" />
-			<arg value="2" name_rus="Окончание" name_eng="end" />
-			<arg value="3" name_rus="Число столбцов" name_eng="size" />
-		</enum>
-	</context>
-
-	<context name_eng="udar">
-		<enum name_rus="Источник сигнала" name_eng="signal_source">
-			<arg value="0" name_rus="Приемник" name_eng="receiver"/>
-			<arg value="1" name_rus="Имитатор" name_eng="imitator"/>
-		</enum>
-
-		<enum name_rus="Управление излучением" name_eng="emission_control">
-			<arg value="0" name_rus="Автоматическое" name_eng="auto"/>
-			<arg value="1" name_rus="Ручное" name_eng="manual"/>
-		</enum>
-
-		<enum name_rus="Состояние линии связи" name_eng="link_status">
-			<arg value="0" name_rus = 'Не обнаружена' name_eng='none'/>
-			<arg value="1" name_rus = 'Обнаружена' name_eng='recon'/>
-			<arg value="2" name_rus = 'Подавляется' name_eng='jamming'/>
-		</enum>
-
-		<enum name_rus="Модуляция" name_eng="modulation">
-			<arg value="0" name_rus="АМ" name_eng="am"/>
-			<arg value="1" name_rus="АТ" name_eng="at"/>
-			<arg value="2" name_rus="ЧМ" name_eng="fm"/>
-			<arg value="3" name_rus="ЧТ" name_eng="fsk"/>
-			<arg value="4" name_rus="ФТ" name_eng="psk"/>
-		</enum>
-	</context>
+ <context name_eng="default">
+  <string name_eng="window_title" name_rus="ЦПУ"/>
+  <string name_eng="settings" name_rus="Настройки"/>
+  <string name_eng="work_mode" name_rus="Режим работы"/>
+  <string name_eng="control_mode" name_rus="Режим управления"/>
+  <string name_eng="configurator" name_rus="Конфигуратор"/>
+  <string name_eng="accept" name_rus="Принять"/>
+  <string name_eng="cancel" name_rus="Отмена"/>
+  <string name_eng="edit" name_rus="Редактировать"/>
+  <string name_eng="remove" name_rus="Удалить"/>
+  <string name_eng="add" name_rus="Добавить"/>
+  <string name_eng="send" name_rus="Отправить"/>
+  <string name_eng="current_time" name_rus="Текущее время"/>
+  <string name_eng="ship_time" name_rus="Корабельное время"/>
+  <string name_eng="moscow_time" name_rus="Московское время"/>
+  <string name_eng="gmt_time" name_rus="Время по Гринвичу"/>
+  <enum name_eng="Env::WorkModes" name_rus="Режим работы">
+   <arg name_eng="training" value="0" name_rus="Тренировка"/>
+   <arg name_eng="war" value="1" name_rus="Боевой"/>
+   <arg name_eng="peace" value="2" name_rus="Повседневный"/>
+   <arg name_eng="regulation" value="3" name_rus="Регламент"/>
+  </enum>
+  <enum name_eng="Env::TaskModes" name_rus="Режим боевой задачи">
+   <arg name_eng="preparation" value="0" name_rus="Подготовка"/>
+   <arg name_eng="adaptation" value="1" name_rus="Адаптация"/>
+   <arg name_eng="jamming" value="2" name_rus="Подавление"/>
+  </enum>
+  <enum name_eng="Env::ControlModes" name_rus="Режим управления">
+   <arg name_eng="local" value="0" name_rus="Автономный"/>
+   <arg name_eng="remote" value="1" name_rus="Централизованный"/>
+  </enum>
+  <enum name_eng="ConnectionStatus" name_rus="Статус соединения">
+   <arg name_eng="connected" value="0" name_rus="Есть соединение"/>
+   <arg name_eng="not_connected" value="1" name_rus="Соединение отсутствует"/>
+  </enum>
+  <string name_eng="tto" name_rus="Текущая тактическая обстановка"/>
+  <string name_eng="no_tto_object" name_rus="Не выбран"/>
+  <enum name_eng="Tto::Model::Columns" name_rus="Колонки объекта ТТО">
+   <arg name_eng="COL_id" value="0" name_rus="Идентификатор"/>
+   <arg name_eng="COL_biusId" value="1" name_rus="Идентификатор в БИУС"/>
+   <arg name_eng="COL_mapId" value="2" name_rus="Идентификатор на карте"/>
+   <arg name_eng="COL_type" value="3" name_rus="Тип"/>
+   <arg name_eng="COL_rate" value="4" name_rus="Скорость"/>
+   <arg name_eng="COL_course" value="5" name_rus="Курс"/>
+   <arg name_eng="COL_latitude" value="6" name_rus="Широта"/>
+   <arg name_eng="COL_longitude" value="7" name_rus="Долгота"/>
+   <arg name_eng="COL_columnCount" value="8" name_rus="Число столбцов"/>
+  </enum>
+  <enum name_eng="Tto::Object::Types" name_rus="Типы тактических объектов">
+   <arg name_eng="TTO_NK" value="0" name_rus="НК"/>
+   <arg name_eng="TTO_LA" value="1" name_rus="ЛА"/>
+   <arg name_eng="TTO_BUS" value="2" name_rus="БУС"/>
+   <arg name_eng="TTO_PL" value="3" name_rus="ПЛ"/>
+  </enum>
+  <enum name_eng="CommLineState" name_rus="Состояния линий связи">
+   <arg name_eng="Unknown" value="0" name_rus="Неизвестно"/>
+   <arg name_eng="Detected" value="1" name_rus="Обнаружена"/>
+   <arg name_eng="Jamming" value="2" name_rus="Подавляется"/>
+   <arg name_eng="Lost" value="3" name_rus="Пропала"/>
+  </enum>
+  <enum name_eng="CombatTaskModel::Columns" name_rus="Колонки таблицы боевого задания">
+   <arg name_eng="Frequency" value="0" name_rus="Частота, Гц"/>
+   <arg name_eng="Band" value="1" name_rus="Полоса, Гц"/>
+   <arg name_eng="Modulation" value="2" name_rus="Модуляция"/>
+   <arg name_eng="Bearing" value="3" name_rus="Азимут подавления, °"/>
+   <arg name_eng="Priority" value="4" name_rus="Приоритет"/>
+   <arg name_eng="Size" value="5" name_rus="Число столбцов"/>
+  </enum>
+  <enum name_eng="ReoModel::Columns" name_rus="Колонки таблицы объектов РЭО">
+   <arg name_eng="Frequency" value="0" name_rus="Частота, Гц"/>
+   <arg name_eng="Band" value="1" name_rus="Полоса, Гц"/>
+   <arg name_eng="Modulation" value="2" name_rus="Модуляция"/>
+   <arg name_eng="Bearing" value="3" name_rus="Азимут подавления, °"/>
+   <arg name_eng="Priority" value="4" name_rus="Приоритет"/>
+   <arg name_eng="Transmitter" value="5" name_rus="ПРД"/>
+   <arg name_eng="Receiver" value="6" name_rus="ПРМ"/>
+   <arg name_eng="State" value="7" name_rus="Состояние"/>
+   <arg name_eng="AppointedAgent" value="8" name_rus="Назначенное средство"/>
+   <arg name_eng="Size" value="9" name_rus="Число столбцов"/>
+  </enum>
+  <enum name_eng="LogModel::Columns" name_rus="Колонки оперативного журнала">
+   <arg name_eng="LOG_Timestamp" value="0" name_rus="Время"/>
+   <arg name_eng="LOG_Type" value="1" name_rus="Тип"/>
+   <arg name_eng="LOG_Emergency" value="2" name_rus="Критичность"/>
+   <arg name_eng="LOG_Descr" value="3" name_rus="Описание"/>
+   <arg name_eng="LOG_Count" value="4" name_rus="Число столбцов"/>
+  </enum>
+  <enum name_eng="Event::Type" name_rus="Тип события">
+   <arg name_eng="Debug" value="0" name_rus="Отладка"/>
+   <arg name_eng="Info" value="1" name_rus="Информация"/>
+   <arg name_eng="Notice" value="2" name_rus="Уведомление"/>
+   <arg name_eng="Warning" value="3" name_rus="Предупреждение"/>
+   <arg name_eng="Error" value="4" name_rus="Ошибка"/>
+   <arg name_eng="Critical" value="5" name_rus="Критично"/>
+   <arg name_eng="Alert" value="6" name_rus="Тревога"/>
+   <arg name_eng="Emergency" value="7" name_rus="Авария"/>
+  </enum>
+  <string name_eng="bearing_choice" name_rus="Выбор пеленга"/>
+  <string name_eng="forbidden_sectors" name_rus="Запрещенные сектора"/>
+  <string name_eng="forbidden_freqs" name_rus="Запрещенные частоты"/>
+  <string name_eng="diagram" name_rus="Диаграмма"/>
+  <string name_eng="table" name_rus="Таблица"/>
+  <string name_eng="intersected_sectors" name_rus="Пересекающиеся сектора"/>
+  <string name_eng="begin_sector" name_rus="Начало сектора"/>
+  <string name_eng="end_sector" name_rus="Конец сектора"/>
+  <string name_eng="ask_merge_sectors" name_rus="Вы хотите объединить эти сектора?"/>
+  <string name_eng="error" name_rus="Ошибка"/>
+  <string name_eng="zero_sector" name_rus="Нулевой сектор"/>
+  <string name_eng="zero_sector_error" name_rus="Начало и конец сектора совпадают."/>
+  <enum name_eng="Sectors::Model::Columns" name_rus="Колонки запрещенных секторов">
+   <arg name_eng="begin" value="0" name_rus="Начало"/>
+   <arg name_eng="end" value="1" name_rus="Конец"/>
+   <arg name_eng="size" value="2" name_rus="Число столбцов"/>
+  </enum>
+  <string name_eng="work_schedule" name_rus="Расписание работ"/>
+  <string name_eng="schedule_error" name_rus="Происходит перекрытие записей расписания"/>
+  <string name_eng="ask_merge_schedule" name_rus="Хотите изменить запись?"/>
+  <string name_eng="begin_time" name_rus="Время начала"/>
+  <string name_eng="end_time" name_rus="Время окончания"/>
+  <string name_eng="begin_now" name_rus="Начать немедленно"/>
+  <string name_eng="until_command" name_rus="До команды"/>
+  <enum name_eng="WorkSchedule::Model::Columns" name_rus="Колонки расписания работ">
+   <arg name_eng="task" value="0" name_rus="Режим"/>
+   <arg name_eng="begin" value="1" name_rus="Начало"/>
+   <arg name_eng="end" value="2" name_rus="Окончание"/>
+   <arg name_eng="size" value="3" name_rus="Число столбцов"/>
+  </enum>
+ </context>
+ <context name_eng="udar">
+  <enum name_eng="signal_source" name_rus="Источник сигнала">
+   <arg name_eng="receiver" value="0" name_rus="Приемник"/>
+   <arg name_eng="imitator" value="1" name_rus="Имитатор"/>
+  </enum>
+  <enum name_eng="emission_control" name_rus="Управление излучением">
+   <arg name_eng="auto" value="0" name_rus="Автоматическое"/>
+   <arg name_eng="manual" value="1" name_rus="Ручное"/>
+  </enum>
+  <enum name_eng="link_status" name_rus="Состояние линии связи">
+   <arg name_eng="none" value="0" name_rus="Не обнаружена"/>
+   <arg name_eng="recon" value="1" name_rus="Обнаружена"/>
+   <arg name_eng="jamming" value="2" name_rus="Подавляется"/>
+  </enum>
+  <enum name_eng="modulation" name_rus="Модуляция">
+   <arg name_eng="am" value="0" name_rus="АМ"/>
+   <arg name_eng="at" value="1" name_rus="АТ"/>
+   <arg name_eng="fm" value="2" name_rus="ЧМ"/>
+   <arg name_eng="fsk" value="3" name_rus="ЧТ"/>
+   <arg name_eng="psk" value="4" name_rus="ФТ"/>
+  </enum>
+ </context>
 </dict>

@@ -17,12 +17,10 @@ RCC_DIR = obj
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    dictionarytreeview.cpp \
     dictionarymodel.cpp \
     dictionaryitem.cpp
 
 HEADERS  += mainwindow.h \
-    dictionarytreeview.h \
     dictionarymodel.h \
     dictionaryitem.h
 

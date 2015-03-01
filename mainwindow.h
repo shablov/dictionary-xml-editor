@@ -4,6 +4,7 @@
 #include <QMainWindow>
 
 class QLineEdit;
+class DictionaryModel;
 
 class MainWindow : public QMainWindow
 {
@@ -29,14 +30,12 @@ private:
 	void createSortTool(QToolBar *toolBar);
 	void createDictionaryView();
 
-	bool setFileName(const QString &fileName);
-
+	void setFileName(const QString &fileName);
 	void saveToFile(const QString &fileName);
 
 private slots:
-	void onOpenFile();
 	bool maybeSave();
-	bool validate();
+	void onOpenFile();
 
 	void onNewFile();
 
@@ -68,6 +67,8 @@ private:
 	QLineEdit *searchLineEdit;
 
 	QString mFileName;
+
+	DictionaryModel *pModel;
 };
 
 #endif // MAINWINDOW_H

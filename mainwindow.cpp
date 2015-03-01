@@ -17,7 +17,7 @@
 #include <QtXmlPatterns/QXmlSchema>
 #include <QtXmlPatterns/QXmlSchemaValidator>
 
-#include "dictionarytreeview.h"
+#include "dictionarymodel.h"
 
 #include <QDebug>
 
@@ -238,95 +238,56 @@ void MainWindow::createSortTool(QToolBar *toolBar)
 
 void MainWindow::createDictionaryView()
 {
-	DictionaryTreeView *treeView = new DictionaryTreeView(this);
+	QTreeView *treeView = new QTreeView(this);
+	pModel = new DictionaryModel;
+	treeView->setModel(pModel);
 	setCentralWidget(treeView);
+}
+
+bool MainWindow::maybeSave()
+{
+	///TODO: диалог о сохранении текущего словаря
+	if (!pModel->isModified())
+	{
+		return true;
+	}
+	int buttonRole = QMessageBox::information(this, "Dictionary is modified",
+							 "Do you want to save the chamges you made to Dictionary?",
+							 QMessageBox::Yes, QMessageBox::NoButton, QMessageBox::Cancel);
+	switch (buttonRole)
+	{
+		case QMessageBox::Yes:
+		{
+			onSaveFile();
+		}
+		case QMessageBox::No:
+		{
+			return true;
+		}
+		default:
+		{
+			return false;
+		}
+	}
+}
+
+void MainWindow::setFileName(const QString &fileName)
+{
+	mFileName = fileName;
 }
 
 void MainWindow::onOpenFile()
 {
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
 													QDir::currentPath(), tr("Xml (*.xml)"));
-	if (!setFileName(fileName))
-	{
-		qDebug() << "Incorrect file name";
-		return;
-	}
-	if (!validate())
-	{
-		qDebug() << "Xml file is invalid";
-		return;
-	}
-
-	qDebug() << Q_FUNC_INFO << "Xml dict is valid";
-	DictionaryTreeView *treeView = qobject_cast<DictionaryTreeView*>(centralWidget());
-	if (treeView)
-	{
-		treeView->loadFromFile(mFileName);
-	}
-}
-
-bool MainWindow::setFileName(const QString &fileName)
-{
-	if ((fileName.isEmpty()) || (!QFile::exists(fileName)))
-	{
-		return false;
-	}
 	if (!maybeSave())
 	{
-		return false;
-	}
-	mFileName = fileName;
-	return true;
-}
-
-void MainWindow::saveToFile(const QString &fileName)
-{
-	DictionaryTreeView *treeView = qobject_cast<DictionaryTreeView*>(centralWidget());
-	if (fileName.isEmpty() || !treeView)
-	{
 		return;
 	}
-	bool saveOk = treeView->saveToFile(fileName);
-	if (!saveOk)
+	if ((pModel) && (pModel->load(fileName)))
 	{
-		/// TODO: сделать QMessageBox кросс платворменным
-		QMessageBox::critical(this, tr("Error"), tr("Can't save to file ") + fileName);
-		return;
+		setFileName(fileName);
 	}
-
-	setFileName(fileName);
-}
-
-bool MainWindow::maybeSave()
-{
-	///TODO: диалог о сохранении текущего словаря
-	return true;
-}
-
-bool MainWindow::validate()
-{
-	QFile dict(mFileName);
-	if (!dict.open(QIODevice::ReadWrite))
-	{
-		qDebug() << "Can't open dict file";
-		return false;
-	}
-
-	QFile file(":/files/xsd_schema");
-	if (!file.open(QIODevice::ReadOnly))
-	{
-		qDebug() << "Can't open schema file";
-		return false;
-	}
-	QXmlSchema schema;
-	if (!schema.load(file.readAll()))
-	{
-		qDebug() << "Schema is invalid";
-		return false;
-	}
-
-	QXmlSchemaValidator validator(schema);
-	return validator.validate(dict.readAll());
 }
 
 void MainWindow::onNewFile()
@@ -336,12 +297,18 @@ void MainWindow::onNewFile()
 		return;
 	}
 
-	mFileName.clear();
-
-	DictionaryTreeView *treeView = qobject_cast<DictionaryTreeView*>(centralWidget());
-	if (treeView)
+	if (pModel)
 	{
-		treeView->newFile();
+		pModel->createNew();
+		setFileName(QString());
+	}
+}
+
+void MainWindow::saveToFile(const QString &fileName)
+{
+	if ((pModel) && (pModel->save(fileName)))
+	{
+		setFileName(fileName);
 	}
 }
 
