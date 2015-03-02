@@ -21,13 +21,19 @@ public:
 	bool validate(const QByteArray &data);
 	bool isModified();
 
+	enum ModelError
+	{
+		FileOpenedError,
+		XsdSchemaOpenedError,
+		InvalidXsdSchema,
+		InvalidXmlFile
+	};
+
 private:
 	DictionaryItem *itemForIndex(const QModelIndex &index) const;
 
 signals:
-	void schemaNotExists();
-	void invalidSchema();
-	void invalidXml();
+	void error(DictionaryModel::ModelError code, const QString &description);
 
 private:
 	enum Columns
@@ -37,6 +43,8 @@ private:
 		ColumnCount
 	};
 	DictionaryItem *rootItem;
+
+	bool mIsModified;
 
 protected:
 	void reset();

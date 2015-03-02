@@ -95,13 +95,22 @@ void DictionaryItem::setRussiaName(const QString &name)
 	rusName = name;
 }
 
-DictionaryItem *DictionaryItem::childAt(int i) const
+DictionaryItem *DictionaryItem::childAt(const int &i) const
 {
-	if ((childItems.isEmpty()) || (childItems.count() < i))
+	if ((childItems.isEmpty()) || (childItems.count() <= i))
 	{
 		return 0;
 	}
 	return childItems.at(i);
+}
+
+DictionaryItem *DictionaryItem::takeChild(const int &i)
+{
+	if ((childItems.isEmpty()) || (childItems.count() <= i))
+	{
+		return 0;
+	}
+	return childItems.takeAt(i);
 }
 
 int DictionaryItem::rowOfChild(DictionaryItem *child) const

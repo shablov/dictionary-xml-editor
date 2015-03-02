@@ -18,11 +18,15 @@ RCC_DIR = obj
 SOURCES += main.cpp\
         mainwindow.cpp \
     dictionarymodel.cpp \
-    dictionaryitem.cpp
+    dictionaryitem.cpp \
+    headerview.cpp \
+    extreeview.cpp
 
 HEADERS  += mainwindow.h \
     dictionarymodel.h \
-    dictionaryitem.h
+    dictionaryitem.h \
+    headerview.h \
+    extreeview.h
 
 RESOURCES += \
     resources.qrc

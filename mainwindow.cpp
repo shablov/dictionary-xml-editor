@@ -2,6 +2,7 @@
 
 #include <QButtonGroup>
 #include <QCheckBox>
+#include <QErrorMessage>
 #include <QFile>
 #include <QFileDialog>
 #include <QLabel>
@@ -17,7 +18,8 @@
 #include <QtXmlPatterns/QXmlSchema>
 #include <QtXmlPatterns/QXmlSchemaValidator>
 
-#include "dictionarymodel.h"
+#include "extreeview.h"
+#include "headerview.h"
 
 #include <QDebug>
 
@@ -44,6 +46,7 @@ void MainWindow::createAction()
 
 	actionAdd = new QAction(QIcon(":images/add_element"), tr("Add"), this);
 	actionRemove = new QAction(QIcon(":images/remove_element"), tr("Remove"), this);
+	actionRemove->setShortcut(QKeySequence::Delete);
 
 	actionUp = new QAction(QIcon(":images/arrow_up"), tr("Up"), this);
 	actionDown = new QAction(QIcon(":images/arrow_down"), tr("Down"), this);
@@ -192,7 +195,7 @@ void MainWindow::createIndexesToolBar()
 	addToolBar(Qt::TopToolBarArea, toolBar);
 	createSearchTool(toolBar);
 	toolBar->addSeparator();
-	createSortTool(toolBar);
+	createFilterTool(toolBar);
 }
 
 void MainWindow::createSearchTool(QToolBar *toolBar)
@@ -217,7 +220,7 @@ void MainWindow::createSearchTool(QToolBar *toolBar)
 	connect(searchLineEdit, SIGNAL(textEdited(QString)), this, SLOT(onSearch(QString)));
 }
 
-void MainWindow::createSortTool(QToolBar *toolBar)
+void MainWindow::createFilterTool(QToolBar *toolBar)
 {
 	QCheckBox *onlyStringsCheckBox = new QCheckBox(tr("Only strings"));
 	QCheckBox *onlyEnumsCheckBox = new QCheckBox(tr("Only enums"));
@@ -238,9 +241,12 @@ void MainWindow::createSortTool(QToolBar *toolBar)
 
 void MainWindow::createDictionaryView()
 {
-	QTreeView *treeView = new QTreeView(this);
+	ExTreeView *treeView = new ExTreeView(this);
 	pModel = new DictionaryModel;
+	connect(pModel, SIGNAL(error(DictionaryModel::ModelError,QString)),
+			this, SLOT(onError(DictionaryModel::ModelError, QString)));
 	treeView->setModel(pModel);
+	treeView->normalizeColumnsWidth();
 	setCentralWidget(treeView);
 }
 
@@ -253,12 +259,12 @@ bool MainWindow::maybeSave()
 	}
 	int buttonRole = QMessageBox::information(this, "Dictionary is modified",
 							 "Do you want to save the chamges you made to Dictionary?",
-							 QMessageBox::Yes, QMessageBox::NoButton, QMessageBox::Cancel);
+							 QMessageBox::Yes, QMessageBox::No, QMessageBox::Cancel);
 	switch (buttonRole)
 	{
 		case QMessageBox::Yes:
 		{
-			onSaveFile();
+			return onSaveFile();
 		}
 		case QMessageBox::No:
 		{
@@ -278,12 +284,12 @@ void MainWindow::setFileName(const QString &fileName)
 
 void MainWindow::onOpenFile()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
-													QDir::currentPath(), tr("Xml (*.xml)"));
 	if (!maybeSave())
 	{
 		return;
 	}
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
+													QDir::currentPath(), tr("Xml (*.xml)"));
 	if ((pModel) && (pModel->load(fileName)))
 	{
 		setFileName(fileName);
@@ -304,30 +310,54 @@ void MainWindow::onNewFile()
 	}
 }
 
-void MainWindow::saveToFile(const QString &fileName)
+bool MainWindow::saveToFile(const QString &fileName)
 {
 	if ((pModel) && (pModel->save(fileName)))
 	{
 		setFileName(fileName);
+		return true;
 	}
+	return false;
 }
 
-void MainWindow::onSaveFile()
+bool MainWindow::onSaveFile()
 {
 	if (mFileName.isEmpty())
 	{
-		onSaveAs();
+		 return onSaveAs();
 	}
 	else
 	{
-		saveToFile(mFileName);
+		 return saveToFile(mFileName);
 	}
 }
 
-void MainWindow::onSaveAs()
+bool MainWindow::onSaveAs()
 {
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
 													QDir::currentPath(), tr("Xml (*.xml)"));
-	saveToFile(fileName);
+	return saveToFile(fileName);
 }
 
+void MainWindow::onAdd()
+{
+}
+
+void MainWindow::onRemove()
+{
+	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
+	if (treeView)
+	{
+		QModelIndex currentIndex = treeView->currentIndex();
+		if (currentIndex.isValid())
+		{
+			pModel->removeRow(currentIndex.row(), currentIndex.parent());
+		}
+	}
+}
+
+void MainWindow::onError(DictionaryModel::ModelError, const QString &description)
+{
+	QErrorMessage *message = QErrorMessage::qtHandler();
+	message->showMessage(description);
+}

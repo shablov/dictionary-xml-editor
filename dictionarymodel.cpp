@@ -1,11 +1,8 @@
 #include "dictionaryitem.h"
 #include "dictionarymodel.h"
 
-#include <QDomElement>
-
 #include <QFile>
-
-#include <QDebug>
+#include <QDomElement>
 #include <QXmlSchema>
 #include <QXmlSchemaValidator>
 
@@ -24,6 +21,7 @@ bool DictionaryModel::load(const QString &fileName)
 	QFile file(fileName);
 	if (!file.open(QIODevice::ReadOnly))
 	{
+		emit error(FileOpenedError, file.errorString());
 		return false;
 	}
 	QByteArray data = file.readAll();
@@ -36,12 +34,14 @@ bool DictionaryModel::load(const QString &fileName)
 	QDomDocument doc("dictionary");
 	if (!doc.setContent(data))
 	{
+		/// NOTE: возможно валидатор обрабатывает все ошибки
 		return false;
 	}
 
 	QDomElement rootElement = doc.documentElement();
 	rootItem = new DictionaryItem(rootElement, 0);
 	reset();
+	mIsModified = false;
 	return true;
 }
 
@@ -60,9 +60,11 @@ bool DictionaryModel::save(const QString &fileName)
 	QFile file(fileName);
 	if (!file.open(QIODevice::WriteOnly))
 	{
+		emit error(FileOpenedError, file.errorString());
 		return false;
 	}
 	file.write(data);
+	mIsModified = false;
 	return true;
 }
 
@@ -80,6 +82,7 @@ void DictionaryModel::createNew()
 		clear();
 	}
 	rootItem = new DictionaryItem;
+	mIsModified = false;
 }
 
 bool DictionaryModel::validate(const QByteArray &data)
@@ -87,17 +90,13 @@ bool DictionaryModel::validate(const QByteArray &data)
 	QFile file(":/files/xsd_schema");
 	if (!file.open(QIODevice::ReadOnly))
 	{
-		qDebug() << "Can't open schema file";
-		/// TODO: сделать обработчик ошибок
-		emit schemaNotExists();
+		emit error(XsdSchemaOpenedError, file.errorString());
 		return false;
 	}
 	QXmlSchema schema;
 	if (!schema.load(file.readAll()))
 	{
-		qDebug() << "Schema is invalid";
-		/// TODO: сделать обработчик ошибок
-		emit invalidSchema();
+		emit error(InvalidXsdSchema, QString("Loading is failed"));
 		return false;
 	}
 
@@ -105,15 +104,16 @@ bool DictionaryModel::validate(const QByteArray &data)
 	bool isValid = validator.validate(data);
 	if (!isValid)
 	{
-		/// TODO: сделать обработчик ошибок
-		emit invalidXml();
+		emit error(InvalidXmlFile, "Xml dictionary is not valid");
 	}
+
+	/// TODO: не сделана проверка на повторяющиеся теги
 	return isValid;
 }
 
 bool DictionaryModel::isModified()
 {
-	return false;
+	return mIsModified;
 }
 
 DictionaryItem *DictionaryModel::itemForIndex(const QModelIndex &index) const
@@ -265,21 +265,21 @@ bool DictionaryModel::setData(const QModelIndex &index, const QVariant &value, i
 	{
 		switch (static_cast<Columns>(index.column()))
 		{
-			case DictionaryModel::EnglishColumn:
-			{
-				item->setEnglishName(value.toString());
-				break;
-			}
-			case DictionaryModel::RussiaColumn:
-			{
-				item->setRussiaName(value.toString());
-				break;
-			}
+		case DictionaryModel::EnglishColumn:
+		{
+			item->setEnglishName(value.toString());
+			break;
+		}
+		case DictionaryModel::RussiaColumn:
+		{
+			item->setRussiaName(value.toString());
+			break;
+		}
 		default:
 			return false;
 		}
 		emit dataChanged(index, index);
-		return true;
+		return mIsModified = true;
 	}
 	return false;
 }
@@ -295,7 +295,7 @@ QVariant DictionaryModel::headerData(int section, Qt::Orientation orientation, i
 	case EnglishColumn:
 		return QString(tr("English"));
 	case RussiaColumn:
-		return QString(tr("Russia"));
+		return QString(tr("Russian"));
 	default:
 		return QVariant();
 	}
@@ -308,7 +308,23 @@ bool DictionaryModel::insertRows(int row, int count, const QModelIndex &parent)
 
 bool DictionaryModel::removeRows(int row, int count, const QModelIndex &parent)
 {
-	return QAbstractItemModel::removeRows(row, count, parent);
+	if (!rootItem)
+	{
+		return false;
+	}
+	DictionaryItem *item = parent.isValid() ? itemForIndex(parent) : rootItem;
+	beginRemoveRows(parent, row, row + count - 1);
+	for (int i = 0; i < count; ++i)
+	{
+		DictionaryItem *childItem = item->takeChild(row);
+		if (childItem)
+		{
+			delete childItem;
+		}
+	}
+	endRemoveRows();
+	mIsModified = true;
+	return true;
 }
 
 Qt::ItemFlags DictionaryModel::flags(const QModelIndex &index) const

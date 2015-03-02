@@ -3,8 +3,9 @@
 
 #include <QMainWindow>
 
+#include "dictionarymodel.h"
+
 class QLineEdit;
-class DictionaryModel;
 
 class MainWindow : public QMainWindow
 {
@@ -27,11 +28,11 @@ private:
 	void createMoveTool(QToolBar *toolBar);
 	void createIndexesToolBar();
 	void createSearchTool(QToolBar *toolBar);
-	void createSortTool(QToolBar *toolBar);
+	void createFilterTool(QToolBar *toolBar);
 	void createDictionaryView();
 
 	void setFileName(const QString &fileName);
-	void saveToFile(const QString &fileName);
+	bool saveToFile(const QString &fileName);
 
 private slots:
 	bool maybeSave();
@@ -39,8 +40,14 @@ private slots:
 
 	void onNewFile();
 
-	void onSaveFile();
-	void onSaveAs();
+	bool onSaveFile();
+	bool onSaveAs();
+
+	void onAdd();
+	void onRemove();
+
+
+	void onError(DictionaryModel::ModelError, const QString &description);
 
 
 private:

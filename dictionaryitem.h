@@ -30,7 +30,8 @@ public:
 	void setEnglishName(const QString &name);
 	void setRussiaName(const QString &name);
 
-	DictionaryItem *childAt(int i) const;
+	DictionaryItem *childAt(const int &i) const;
+	DictionaryItem *takeChild(const int &i);
 	int rowOfChild(DictionaryItem *child) const;
 	int childCount() const;
 	void insertChild(const int &i, DictionaryItem *childItem);
