@@ -1,8 +1,9 @@
 #ifndef DICTIONARYMODEL_H
 #define DICTIONARYMODEL_H
 
+#include "dictionaryitem.h"
+
 #include <QAbstractItemModel>
-#include <QStandardItemModel>
 
 class DictionaryItem;
 
@@ -28,6 +29,10 @@ public:
 		InvalidXsdSchema,
 		InvalidXmlFile
 	};
+
+	DictionaryItem::ItemType typeForIndex(const QModelIndex &index) const;
+
+	void insertDictionaryItem(DictionaryItem::ItemType type, const QModelIndex &index);
 
 private:
 	DictionaryItem *itemForIndex(const QModelIndex &index) const;

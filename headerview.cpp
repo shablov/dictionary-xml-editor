@@ -45,28 +45,28 @@ void HeaderView::paintSection(QPainter *painter, const QRect &rect, int logicalI
 		}
 
 		QVariant textAlignment = model()->headerData(logicalIndex, orientation(),
-													  Qt::TextAlignmentRole);
+													 Qt::TextAlignmentRole);
 		opt.rect = rect;
 		opt.section = logicalIndex;
 		opt.state |= state;
 		opt.textAlignment = Qt::Alignment(textAlignment.toInt());
 		opt.iconAlignment = Qt::AlignVCenter;
 		opt.text = model()->headerData(logicalIndex, orientation(),
-										Qt::DisplayRole).toString();
+									   Qt::DisplayRole).toString();
 		if (textElideMode() != Qt::ElideNone)
 		{
 			opt.text = opt.fontMetrics.elidedText(opt.text, textElideMode() , rect.width() - 4);
 		}
 
 		QVariant variant = model()->headerData(logicalIndex, orientation(),
-												Qt::DecorationRole);
+											   Qt::DecorationRole);
 		opt.icon = qvariant_cast<QIcon>(variant);
 		if (opt.icon.isNull())
 		{
 			opt.icon = qvariant_cast<QPixmap>(variant);
 		}
 		QVariant foregroundBrush = model()->headerData(logicalIndex, orientation(),
-														Qt::ForegroundRole);
+													   Qt::ForegroundRole);
 
 #if QT_VERSION >= 050000
 		if (foregroundBrush.canConvert(QMetaType::QBrush))
@@ -79,7 +79,7 @@ void HeaderView::paintSection(QPainter *painter, const QRect &rect, int logicalI
 
 		QPointF oldBO = painter->brushOrigin();
 		QVariant backgroundBrush = model()->headerData(logicalIndex, orientation(),
-														Qt::BackgroundRole);
+													   Qt::BackgroundRole);
 
 #if QT_VERSION >= 050000
 		if (backgroundBrush.canConvert(QMetaType::QBrush))

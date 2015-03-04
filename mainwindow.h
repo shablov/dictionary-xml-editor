@@ -6,6 +6,8 @@
 #include "dictionarymodel.h"
 
 class QLineEdit;
+class QMenu;
+class QActionGroup;
 
 class MainWindow : public QMainWindow
 {
@@ -16,19 +18,29 @@ public:
 
 private:
 	void createAction();
+	void createFileActions();
+	void createItemsActions();
+	void createMoveActions();
+	void createEditActions();
+	void createSearchAction();
+
 	void createMenuBar();
 	void createFileMenu();
 	void createEditMenu();
+	void createAddMenu();
 
 	void createToolBar();
 	void createFileEditToolBar();
 	void createFileTool(QToolBar *toolBar);
 	void createEditTool(QToolBar *toolBar);
-	void createElementTool(QToolBar *toolBar);
+	void createItemsTool(QToolBar *toolBar);
 	void createMoveTool(QToolBar *toolBar);
 	void createIndexesToolBar();
 	void createSearchTool(QToolBar *toolBar);
 	void createFilterTool(QToolBar *toolBar);
+
+	void createContextMenu();
+
 	void createDictionaryView();
 
 	void setFileName(const QString &fileName);
@@ -43,8 +55,11 @@ private slots:
 	bool onSaveFile();
 	bool onSaveAs();
 
-	void onAdd();
+	void onAdd(QAction *action);
 	void onRemove();
+
+	void leavePermittedActions(const QModelIndex &index = QModelIndex());
+	void onCustomContextMenuRequested(const QPoint &point);
 
 
 	void onError(DictionaryModel::ModelError, const QString &description);
@@ -56,7 +71,8 @@ private:
 	QAction *actionSaveFile;
 	QAction *actionSaveAs;
 
-	QAction *actionAdd;
+	QMenu *menuAdd;
+	QActionGroup *actionGroupAdd;
 	QAction *actionRemove;
 
 	QAction *actionUp;
@@ -67,15 +83,20 @@ private:
 	QAction *actionCut;
 	QAction *actionCopy;
 	QAction *actionPaste;
-	QAction *actionEdit;
 
 	QAction *actionSearch;
 
 	QLineEdit *searchLineEdit;
 
+	QMenu *contextMenu;
+
 	QString mFileName;
 
 	DictionaryModel *pModel;
+
+	// QWidget interface
+protected:
+	virtual void closeEvent(QCloseEvent *event);
 };
 
 #endif // MAINWINDOW_H

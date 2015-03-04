@@ -18,6 +18,7 @@ private:
 	// QWidget interface
 protected:
 	virtual void resizeEvent(QResizeEvent *event);
+	virtual void keyReleaseEvent(QKeyEvent *keyEvent);
 };
 
 

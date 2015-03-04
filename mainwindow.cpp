@@ -10,10 +10,13 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QRadioButton>
 #include <QToolBar>
 #include <QToolButton>
 #include <QTreeView>
 #include <QVBoxLayout>
+#include <QWidgetAction>
+#include <qevent.h>
 
 #include <QtXmlPatterns/QXmlSchema>
 #include <QtXmlPatterns/QXmlSchemaValidator>
@@ -34,70 +37,99 @@ MainWindow::MainWindow(QWidget *parent)
 	createAction();
 	createMenuBar();
 	createToolBar();
+	createContextMenu();
 	createDictionaryView();
+
+	leavePermittedActions();
 }
 
 void MainWindow::createAction()
+{
+	createFileActions();
+	createItemsActions();
+	createEditActions();
+	createMoveActions();
+	createSearchAction();
+}
+
+void MainWindow::createFileActions()
 {
 	actionNewFile = new QAction(QIcon(":images/new_file"), tr("New file"), this);
 	actionOpenFile = new QAction(QIcon(":images/open_file"), tr("Open file"), this);
 	actionSaveFile = new QAction(QIcon(":images/save_file"), tr("Save file"), this);
 	actionSaveAs = new QAction(QIcon(":images/save_file"), tr("Save as ..."), this);
 
-	actionAdd = new QAction(QIcon(":images/add_element"), tr("Add"), this);
-	actionRemove = new QAction(QIcon(":images/remove_element"), tr("Remove"), this);
-	actionRemove->setShortcut(QKeySequence::Delete);
-
-	actionUp = new QAction(QIcon(":images/arrow_up"), tr("Up"), this);
-	actionDown = new QAction(QIcon(":images/arrow_down"), tr("Down"), this);
-	actionLeft = new QAction(QIcon(":images/arrow_left"), tr("Left"), this);
-	actionRight = new QAction(QIcon(":images/arrow_right"), tr("Right"), this);
-
-	actionCut = new QAction(QIcon(":images/cut"), tr("Cut"), this);
-	actionCopy = new QAction(QIcon(":images/copy"), tr("Copy"), this);
-	actionPaste = new QAction(QIcon(":images/paste"), tr("Paste"), this);
-	actionEdit = new QAction(QIcon(":images/edit"), tr("Edit"), this);
-
-	actionSearch = new QAction(QIcon(":images/search"), tr("Search"), this);
-
 	actionNewFile->setIconVisibleInMenu(true);
 	actionOpenFile->setIconVisibleInMenu(true);
 	actionSaveFile->setIconVisibleInMenu(true);
 	actionSaveAs->setIconVisibleInMenu(true);
 
-	actionAdd->setIconVisibleInMenu(true);
+	connect(actionNewFile, SIGNAL(triggered()), this, SLOT(onNewFile()));
+	connect(actionOpenFile, SIGNAL(triggered()), this, SLOT(onOpenFile()));
+	connect(actionSaveFile, SIGNAL(triggered()), this, SLOT(onSaveFile()));
+	connect(actionSaveAs, SIGNAL(triggered()), this, SLOT(onSaveAs()));
+}
+
+void MainWindow::createItemsActions()
+{
+	actionGroupAdd = new QActionGroup(this);
+	for (int i = 0; i < DictionaryItem::Invalid; i++)
+	{
+		QByteArray actionName = DictionaryItem::tagNameForType(static_cast<DictionaryItem::ItemType>(i));
+		QAction *actionAdd =  new QAction(QIcon(":images/add_element"), tr("Add " + actionName), this);
+		actionAdd->setIconVisibleInMenu(true);
+		actionAdd->setData(i);
+		actionAdd->setVisible(false);
+		actionGroupAdd->addAction(actionAdd);
+	}
+
+
+	actionRemove = new QAction(QIcon(":images/remove_element"), tr("Remove"), this);
 	actionRemove->setIconVisibleInMenu(true);
+	actionRemove->setShortcut(QKeySequence::Delete);
+
+	connect(actionRemove, SIGNAL(triggered()), this, SLOT(onRemove()));
+	connect(actionGroupAdd, SIGNAL(triggered(QAction*)), this, SLOT(onAdd(QAction*)));
+}
+
+void MainWindow::createMoveActions()
+{
+	actionUp = new QAction(QIcon(":images/arrow_up"), tr("Up"), this);
+	actionDown = new QAction(QIcon(":images/arrow_down"), tr("Down"), this);
+	actionLeft = new QAction(QIcon(":images/arrow_left"), tr("Left"), this);
+	actionRight = new QAction(QIcon(":images/arrow_right"), tr("Right"), this);
 
 	actionUp->setIconVisibleInMenu(true);
 	actionDown->setIconVisibleInMenu(true);
 	actionLeft->setIconVisibleInMenu(true);
 	actionRight->setIconVisibleInMenu(true);
 
-	actionCut->setIconVisibleInMenu(true);
-	actionCopy->setIconVisibleInMenu(true);
-	actionPaste->setIconVisibleInMenu(true);
-	actionEdit->setIconVisibleInMenu(true);
-
-	actionSearch->setIconVisibleInMenu(true);
-
-	connect(actionNewFile, SIGNAL(triggered()), this, SLOT(onNewFile()));
-	connect(actionOpenFile, SIGNAL(triggered()), this, SLOT(onOpenFile()));
-	connect(actionSaveFile, SIGNAL(triggered()), this, SLOT(onSaveFile()));
-	connect(actionSaveAs, SIGNAL(triggered()), this, SLOT(onSaveAs()));
-
-	connect(actionAdd, SIGNAL(triggered()), this, SLOT(onAdd()));
-	connect(actionRemove, SIGNAL(triggered()), this, SLOT(onRemove()));
-
 	connect(actionUp, SIGNAL(triggered()), this, SLOT(onUp()));
 	connect(actionDown, SIGNAL(triggered()), this, SLOT(onDown()));
 	connect(actionLeft, SIGNAL(triggered()), this, SLOT(onLeft()));
 	connect(actionRight, SIGNAL(triggered()), this, SLOT(onRight()));
+}
+
+void MainWindow::createEditActions()
+{
+	actionCut = new QAction(QIcon(":images/cut"), tr("Cut"), this);
+	actionCopy = new QAction(QIcon(":images/copy"), tr("Copy"), this);
+	actionPaste = new QAction(QIcon(":images/paste"), tr("Paste"), this);
+
+	actionCut->setIconVisibleInMenu(true);
+	actionCopy->setIconVisibleInMenu(true);
+	actionPaste->setIconVisibleInMenu(true);
 
 	connect(actionCut, SIGNAL(triggered()), this, SLOT(onCut()));
 	connect(actionCopy, SIGNAL(triggered()), this, SLOT(onCopy()));
 	connect(actionPaste, SIGNAL(triggered()), this, SLOT(onPaste()));
-	connect(actionEdit, SIGNAL(triggered()), this, SLOT(onEdit()));
 
+}
+
+void MainWindow::createSearchAction()
+{
+	actionSearch = new QAction(QIcon(":images/search"), tr("Search"), this);
+	actionSearch->setIconVisibleInMenu(true);
 	actionSearch->setShortcut(QKeySequence::Find);
 }
 
@@ -122,8 +154,10 @@ void MainWindow::createFileMenu()
 
 void MainWindow::createEditMenu()
 {
+	createAddMenu();
+
 	QMenu *editMenu = menuBar()->addMenu(tr("Edit"));
-	editMenu->addAction(actionAdd);
+	editMenu->addMenu(menuAdd);
 	editMenu->addAction(actionRemove);
 
 	QMenu *moveMenu = editMenu->addMenu(QIcon(":images/drag_arrow"), tr("Move"));
@@ -136,8 +170,13 @@ void MainWindow::createEditMenu()
 	editMenu->addAction(actionCut);
 	editMenu->addAction(actionCopy);
 	editMenu->addAction(actionPaste);
-	editMenu->addAction(actionEdit);
+}
 
+void MainWindow::createAddMenu()
+{
+	menuAdd = new QMenu(tr("Add"), this);
+	menuAdd->setIcon(QIcon(":images/add_element"));
+	menuAdd->addActions(actionGroupAdd->actions());
 }
 
 void MainWindow::createToolBar()
@@ -155,8 +194,6 @@ void MainWindow::createFileEditToolBar()
 	toolBar->addSeparator();
 	createEditTool(toolBar);
 	toolBar->addSeparator();
-	createElementTool(toolBar);
-	toolBar->addSeparator();
 	createMoveTool(toolBar);
 }
 
@@ -172,12 +209,21 @@ void MainWindow::createEditTool(QToolBar *toolBar)
 	toolBar->addAction(actionCut);
 	toolBar->addAction(actionCopy);
 	toolBar->addAction(actionPaste);
-	toolBar->addAction(actionEdit);
+	toolBar->addSeparator();
+	createItemsTool(toolBar);
 }
 
-void MainWindow::createElementTool(QToolBar *toolBar)
+void MainWindow::createItemsTool(QToolBar *toolBar)
 {
-	toolBar->addAction(actionAdd);
+	/// TODO: styleSheet перенести в отдельный файл
+	QToolButton *menuAddButton = new QToolButton(this);
+	menuAddButton->setObjectName("menuAddButton");
+	menuAddButton->setIcon(menuAdd->icon());
+	menuAddButton->setPopupMode( QToolButton::InstantPopup);
+	menuAddButton->setMenu(menuAdd);
+	menuAddButton->setStyleSheet("QToolButton#menuAddButton{border-style: none}");
+
+	toolBar->addWidget(menuAddButton);
 	toolBar->addAction(actionRemove);
 }
 
@@ -200,14 +246,15 @@ void MainWindow::createIndexesToolBar()
 
 void MainWindow::createSearchTool(QToolBar *toolBar)
 {
-	searchLineEdit = new QLineEdit();
+	/// TODO: вынести stylesheet в отдельный файл
+	searchLineEdit = new QLineEdit(toolBar);
 	searchLineEdit->setPlaceholderText(tr("Quick search(Ctrl+F)"));
+	searchLineEdit->setObjectName("searchLineEdit");
 	toolBar->addWidget(searchLineEdit);
-    qDebug() << qVersion();
 #if QT_VERSION >= 0x050300
 	searchLineEdit->addAction(actionSearch, QLineEdit::TrailingPosition);
 #else
-	searchLineEdit->setStyleSheet(QString("QLineEdit"
+	searchLineEdit->setStyleSheet(QString("QLineEdit#searchLineEdit"
 										  "{"
 										  "border: 1px solid #000000;"
 										  "image: url(:/images/search);"
@@ -222,8 +269,13 @@ void MainWindow::createSearchTool(QToolBar *toolBar)
 
 void MainWindow::createFilterTool(QToolBar *toolBar)
 {
-	QCheckBox *onlyStringsCheckBox = new QCheckBox(tr("Only strings"));
-	QCheckBox *onlyEnumsCheckBox = new QCheckBox(tr("Only enums"));
+	QRadioButton *onlyStringsCheckBox = new QRadioButton(tr("Only strings"));
+	QRadioButton *onlyEnumsCheckBox = new QRadioButton(tr("Only enums"));
+	QButtonGroup *checkBoxGroup = new QButtonGroup;
+	checkBoxGroup->setExclusive(true);
+	checkBoxGroup->addButton(onlyStringsCheckBox);
+	checkBoxGroup->addButton(onlyEnumsCheckBox);
+	connect(checkBoxGroup, SIGNAL(buttonClicked(int)), this, SLOT(onFilter()));
 
 	QWidget *widget = new QWidget;
 	widget->setLayout(new QVBoxLayout);
@@ -231,35 +283,43 @@ void MainWindow::createFilterTool(QToolBar *toolBar)
 	widget->layout()->addWidget(onlyEnumsCheckBox);
 
 	toolBar->addWidget(widget);
+}
 
-	QButtonGroup *checkBoxGroup = new QButtonGroup;
-	checkBoxGroup->setExclusive(true);
-	checkBoxGroup->addButton(onlyStringsCheckBox);
-	checkBoxGroup->addButton(onlyEnumsCheckBox);
-	connect(checkBoxGroup, SIGNAL(buttonClicked(int)), this, SLOT(onFilter()));
+void MainWindow::createContextMenu()
+{
+	contextMenu = new QMenu;
+	contextMenu->addAction(actionRemove);
+	contextMenu->addMenu(menuAdd);
+
+	setContextMenuPolicy(Qt::CustomContextMenu);
+	connect(this, SIGNAL(customContextMenuRequested(QPoint)),
+			SLOT(onCustomContextMenuRequested(QPoint)));
 }
 
 void MainWindow::createDictionaryView()
 {
-	ExTreeView *treeView = new ExTreeView(this);
 	pModel = new DictionaryModel;
 	connect(pModel, SIGNAL(error(DictionaryModel::ModelError,QString)),
 			this, SLOT(onError(DictionaryModel::ModelError, QString)));
+
+	ExTreeView *treeView = new ExTreeView(this);
+	treeView->installEventFilter(this);
 	treeView->setModel(pModel);
 	treeView->normalizeColumnsWidth();
+	connect(treeView, SIGNAL(pressed(QModelIndex)), this, SLOT(leavePermittedActions(QModelIndex)));
+
 	setCentralWidget(treeView);
 }
 
 bool MainWindow::maybeSave()
 {
-	///TODO: диалог о сохранении текущего словаря
 	if (!pModel->isModified())
 	{
 		return true;
 	}
 	int buttonRole = QMessageBox::information(this, "Dictionary is modified",
-							 "Do you want to save the chamges you made to Dictionary?",
-							 QMessageBox::Yes, QMessageBox::No, QMessageBox::Cancel);
+											  "Do you want to save the changes you made to Dictionary?",
+											  QMessageBox::Yes, QMessageBox::No, QMessageBox::Cancel);
 	switch (buttonRole)
 	{
 		case QMessageBox::Yes:
@@ -290,7 +350,7 @@ void MainWindow::onOpenFile()
 	}
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
 													QDir::currentPath(), tr("Xml (*.xml)"));
-	if ((pModel) && (pModel->load(fileName)))
+	if ((!fileName.isEmpty()) && (pModel) && (pModel->load(fileName)))
 	{
 		setFileName(fileName);
 	}
@@ -324,11 +384,11 @@ bool MainWindow::onSaveFile()
 {
 	if (mFileName.isEmpty())
 	{
-		 return onSaveAs();
+		return onSaveAs();
 	}
 	else
 	{
-		 return saveToFile(mFileName);
+		return saveToFile(mFileName);
 	}
 }
 
@@ -336,11 +396,22 @@ bool MainWindow::onSaveAs()
 {
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
 													QDir::currentPath(), tr("Xml (*.xml)"));
+	if (fileName.isEmpty())
+	{
+		return true;
+	}
 	return saveToFile(fileName);
 }
 
-void MainWindow::onAdd()
+void MainWindow::onAdd(QAction *action)
 {
+	DictionaryItem::ItemType type = static_cast<DictionaryItem::ItemType>(action->data().toUInt());
+	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
+	if (treeView)
+	{
+		pModel->insertDictionaryItem(type, treeView->currentIndex());
+		leavePermittedActions(treeView->currentIndex());
+	}
 }
 
 void MainWindow::onRemove()
@@ -353,6 +424,48 @@ void MainWindow::onRemove()
 		{
 			pModel->removeRow(currentIndex.row(), currentIndex.parent());
 		}
+		leavePermittedActions(treeView->currentIndex());
+	}
+}
+
+void MainWindow::leavePermittedActions(const QModelIndex &index)
+{
+	DictionaryItem::ItemType type = pModel->typeForIndex(index);
+
+	actionGroupAdd->actions()[DictionaryItem::ContextType]->setVisible(
+				type == DictionaryItem::ContextType ||
+				type == DictionaryItem::Invalid);
+
+	actionGroupAdd->actions()[DictionaryItem::StringType]->setVisible(
+				type == DictionaryItem::ContextType ||
+				type == DictionaryItem::StringType ||
+				type == DictionaryItem::EnumType);
+
+	actionGroupAdd->actions()[DictionaryItem::EnumType]->setVisible(
+				type == DictionaryItem::ContextType ||
+				type == DictionaryItem::StringType ||
+				type == DictionaryItem::EnumType);
+
+	actionGroupAdd->actions()[DictionaryItem::ArgType]->setVisible(
+				type == DictionaryItem::EnumType ||
+				type == DictionaryItem::ArgType);
+
+	actionRemove->setDisabled(type == DictionaryItem::Invalid);
+}
+
+void MainWindow::onCustomContextMenuRequested(const QPoint &point)
+{
+	if (!contextMenu)
+	{
+		return;
+	}
+
+	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
+	if (treeView)
+	{
+		QPoint globalPoint = mapToGlobal(point);
+		leavePermittedActions(treeView->currentIndex());
+		contextMenu->exec(globalPoint);
 	}
 }
 
@@ -360,4 +473,9 @@ void MainWindow::onError(DictionaryModel::ModelError, const QString &description
 {
 	QErrorMessage *message = QErrorMessage::qtHandler();
 	message->showMessage(description);
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+	event->setAccepted(maybeSave());
 }

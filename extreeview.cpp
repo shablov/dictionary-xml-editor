@@ -1,6 +1,8 @@
 #include "extreeview.h"
 #include "headerview.h"
 
+#include <QKeyEvent>
+
 
 ExTreeView::ExTreeView(QWidget *parent) :
 	QTreeView(parent)
@@ -54,5 +56,20 @@ void ExTreeView::resizeEvent(QResizeEvent *event)
 	{
 		int colWidth = widthPercent * mColumnsPercentWidth[col];
 		setColumnWidth(col, colWidth);
+	}
+}
+
+
+void ExTreeView::keyReleaseEvent(QKeyEvent *keyEvent)
+{
+	QTreeView::keyReleaseEvent(keyEvent);
+	if (keyEvent->key() == Qt::Key_Up ||
+			keyEvent->key() == Qt::Key_Down)
+	{
+		QModelIndex index = currentIndex();
+		if (index.isValid())
+		{
+			emit pressed(index);
+		}
 	}
 }

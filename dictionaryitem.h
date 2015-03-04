@@ -15,20 +15,24 @@ public:
 		ContextType,
 		StringType,
 		EnumType,
-		ArgType
+		ArgType,
+		Invalid
 	};
 
 	explicit DictionaryItem();
-	explicit DictionaryItem(ItemType type, DictionaryItem *parent);
-	explicit DictionaryItem(const QDomElement &domElement, DictionaryItem *parent);
+	explicit DictionaryItem(ItemType typeForTagName, DictionaryItem *parent = 0);
+	explicit DictionaryItem(const QDomElement &domElement, DictionaryItem *parent = 0);
 	~DictionaryItem();
 
 	QString englishName() const;
 	QString russiaName() const;
 	ItemType type() const;
+	static ItemType typeForTagName(const QString &tagName);
+	static QByteArray tagNameForType(ItemType typeForTagName);
 
 	void setEnglishName(const QString &name);
 	void setRussiaName(const QString &name);
+	void setParent(DictionaryItem *parent);
 
 	DictionaryItem *childAt(const int &i) const;
 	DictionaryItem *takeChild(const int &i);

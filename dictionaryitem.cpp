@@ -10,30 +10,7 @@ DictionaryItem::DictionaryItem() :
 
 DictionaryItem::DictionaryItem(ItemType type, DictionaryItem *parent) : parentItem(parent)
 {
-	switch (type) {
-		case DictionaryItem::ContextType:
-		{
-			tagName = "context";
-			break;
-		}
-		case DictionaryItem::StringType:
-		{
-			tagName = "string";
-			break;
-		}
-		case DictionaryItem::EnumType:
-		{
-			tagName = "enum";
-			break;
-		}
-		case DictionaryItem::ArgType:
-		{
-			tagName = "arg";
-			break;
-		}
-		default:
-			break;
-	}
+	tagName = tagNameForType(type);
 }
 
 DictionaryItem::DictionaryItem(const QDomElement &domElement, DictionaryItem *parent)
@@ -70,6 +47,11 @@ QString DictionaryItem::russiaName() const
 
 DictionaryItem::ItemType DictionaryItem::type() const
 {
+	return typeForTagName(tagName);
+}
+
+DictionaryItem::ItemType DictionaryItem::typeForTagName(const QString &tagName)
+{
 	if (tagName == "enum")
 	{
 		return EnumType;
@@ -82,7 +64,23 @@ DictionaryItem::ItemType DictionaryItem::type() const
 	{
 		return ArgType;
 	}
-	return ContextType;
+	if (tagName == "context")
+	{
+		return ContextType;
+	}
+	return Invalid;
+}
+
+QByteArray DictionaryItem::tagNameForType(DictionaryItem::ItemType type)
+{
+	switch (type)
+	{
+		case DictionaryItem::ContextType: return "context";
+		case DictionaryItem::StringType: return "string";
+		case DictionaryItem::EnumType: return "enum";
+		case DictionaryItem::ArgType: return "arg";
+		default: return QByteArray();
+	}
 }
 
 void DictionaryItem::setEnglishName(const QString &name)
@@ -93,6 +91,11 @@ void DictionaryItem::setEnglishName(const QString &name)
 void DictionaryItem::setRussiaName(const QString &name)
 {
 	rusName = name;
+}
+
+void DictionaryItem::setParent(DictionaryItem *parent)
+{
+	parentItem = parent;
 }
 
 DictionaryItem *DictionaryItem::childAt(const int &i) const
@@ -125,6 +128,7 @@ int DictionaryItem::childCount() const
 
 void DictionaryItem::insertChild(const int &i, DictionaryItem *childItem)
 {
+	childItem->setParent(this);
 	childItems.insert(i, childItem);
 }
 
