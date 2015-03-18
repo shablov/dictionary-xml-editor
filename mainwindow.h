@@ -46,6 +46,8 @@ private:
 	void setFileName(const QString &fileName);
 	bool saveToFile(const QString &fileName);
 
+	bool isPossiblePlugIn(DictionaryItem::ItemType plugInType, DictionaryItem::ItemType indexType);
+
 private slots:
 	bool maybeSave();
 	void onOpenFile();
@@ -57,6 +59,10 @@ private slots:
 
 	void onAdd(QAction *action);
 	void onRemove();
+
+	void onCut();
+	void onCopy();
+	void onPaste();
 
 	void leavePermittedActions(const QModelIndex &index = QModelIndex());
 	void onCustomContextMenuRequested(const QPoint &point);
@@ -77,8 +83,6 @@ private:
 
 	QAction *actionUp;
 	QAction *actionDown;
-	QAction *actionLeft;
-	QAction *actionRight;
 
 	QAction *actionCut;
 	QAction *actionCopy;

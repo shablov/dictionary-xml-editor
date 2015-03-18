@@ -8,14 +8,14 @@
 #include <QXmlSchemaValidator>
 
 DictionaryModel::DictionaryModel(QObject *parent) :
-	QAbstractItemModel(parent), rootItem(0)
+	QAbstractItemModel(parent), pRootItem(0), pCutItem(0)
 {
 	createNew();
 }
 
 DictionaryModel::~DictionaryModel()
 {
-	delete rootItem;
+	delete pRootItem;
 }
 
 bool DictionaryModel::load(const QString &fileName)
@@ -41,7 +41,7 @@ bool DictionaryModel::load(const QString &fileName)
 	}
 
 	QDomElement rootElement = doc.documentElement();
-	rootItem = new DictionaryItem(rootElement);
+	pRootItem = new DictionaryItem(rootElement);
 	reset();
 	mIsModified = false;
 	return true;
@@ -49,11 +49,11 @@ bool DictionaryModel::load(const QString &fileName)
 
 bool DictionaryModel::save(const QString &fileName)
 {
-	if (!rootItem)
+	if (!pRootItem)
 	{
 		return false;
 	}
-	QDomDocument doc = rootItem->toDomDocument();
+	QDomDocument doc = pRootItem->toDomDocument();
 	QByteArray data = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" + doc.toByteArray();
 	if (!validate(data))
 	{
@@ -72,18 +72,18 @@ bool DictionaryModel::save(const QString &fileName)
 
 void DictionaryModel::clear()
 {
-	delete rootItem;
-	rootItem = 0;
+	delete pRootItem;
+	pRootItem = 0;
 	reset();
 }
 
 void DictionaryModel::createNew()
 {
-	if (rootItem)
+	if (pRootItem)
 	{
 		clear();
 	}
-	rootItem = new DictionaryItem;
+	pRootItem = new DictionaryItem;
 	mIsModified = false;
 }
 
@@ -130,42 +130,56 @@ DictionaryItem::ItemType DictionaryModel::typeForIndex(const QModelIndex &index)
 
 void DictionaryModel::insertDictionaryItem(DictionaryItem::ItemType type, const QModelIndex &index)
 {
-	if (!rootItem)
+	DictionaryItem *item = new DictionaryItem(type);
+	if (!insertItem(item, index))
 	{
-		return;
+		delete item;
+		item = 0;
 	}
-	DictionaryItem *item = itemForIndex(index);
-	DictionaryItem *parentItem;
-	QModelIndex parentIndex;
-	switch (type)
+}
+
+void DictionaryModel::cutItem(const int &row, const QModelIndex &parent)
+{
+	DictionaryItem *parentItem = itemForIndex(parent);
+	beginRemoveRows(parent, row, row);
+	if (pCutItem)
 	{
-		case DictionaryItem::ContextType:
-		{
-			parentItem = rootItem;
-			parentIndex = parent(index);
-			break;
-		}
-		case DictionaryItem::StringType:
-		case DictionaryItem::EnumType:
-		{
-			parentItem = (item->parent() == rootItem) ? (item) : (item->parent());
-			parentIndex = (item->parent() == rootItem) ? (index) : (parent(index));
-			break;
-		}
-		case DictionaryItem::ArgType:
-		{
-			parentItem = (item->type() == DictionaryItem::EnumType) ? (item) : (item->parent());
-			parentIndex = (item->type() == DictionaryItem::EnumType) ? (index) : (parent(index));
-			break;
-		}
-		default:
-			return;
+		delete pCutItem;
+		pCutItem = 0;
 	}
-	int row = parentItem->rowOfChild(item);
-	row = (row == -1) ? parentItem->childCount() : (row + 1);
-	parentItem->insertChild(row, new DictionaryItem(type));
-	insertRow(row, parentIndex);
-	mIsModified = true;
+	pCutItem = parentItem->takeChild(row);
+	endRemoveRows();
+}
+
+void DictionaryModel::copyItem(const int &row, const QModelIndex &parent)
+{
+
+	DictionaryItem *parentItem = itemForIndex(parent);
+	if (pCutItem)
+	{
+		delete pCutItem;
+		pCutItem = 0;
+	}
+	pCutItem = new DictionaryItem(parentItem->childAt(row));
+}
+
+DictionaryItem::ItemType DictionaryModel::typeForCutItem()
+{
+	if (pCutItem)
+	{
+		return pCutItem->type();
+	}
+	return DictionaryItem::Invalid;
+}
+
+void DictionaryModel::pasteItem(const QModelIndex &index)
+{
+	DictionaryItem *item = new DictionaryItem(pCutItem);
+	if (!insertItem(item, index))
+	{
+		delete item;
+		item = 0;
+	}
 }
 
 DictionaryItem *DictionaryModel::itemForIndex(const QModelIndex &index) const
@@ -178,7 +192,48 @@ DictionaryItem *DictionaryModel::itemForIndex(const QModelIndex &index) const
 			return item;
 		}
 	}
-	return rootItem;
+	return pRootItem;
+}
+
+bool DictionaryModel::insertItem(DictionaryItem *itemForInsert, const QModelIndex &index)
+{
+	if (!pRootItem)
+	{
+		return false;
+	}
+	DictionaryItem *item = itemForIndex(index);
+	DictionaryItem *parentItem;
+	QModelIndex parentIndex;
+	switch (itemForInsert->type())
+	{
+		case DictionaryItem::ContextType:
+		{
+			parentItem = pRootItem;
+			parentIndex = parent(index);
+			break;
+		}
+		case DictionaryItem::StringType:
+		case DictionaryItem::EnumType:
+		{
+			parentItem = (item->parent() == pRootItem) ? (item) : (item->parent());
+			parentIndex = (item->parent() == pRootItem) ? (index) : (parent(index));
+			break;
+		}
+		case DictionaryItem::ArgType:
+		{
+			parentItem = (item->type() == DictionaryItem::EnumType) ? (item) : (item->parent());
+			parentIndex = (item->type() == DictionaryItem::EnumType) ? (index) : (parent(index));
+			break;
+		}
+		default:
+			return false;
+	}
+	int row = parentItem->rowOfChild(item);
+	row = (row == -1) ? parentItem->childCount() : (row + 1);
+	parentItem->insertChild(row, itemForInsert);
+	insertRow(row, parentIndex);
+	mIsModified = true;
+	return true;
 }
 
 void DictionaryModel::reset()
@@ -193,7 +248,7 @@ void DictionaryModel::reset()
 
 QModelIndex DictionaryModel::index(int row, int column, const QModelIndex &parent) const
 {
-	if (!rootItem || row < 0 || column < 0 || column >= ColumnCount
+	if (!pRootItem || row < 0 || column < 0 || column >= ColumnCount
 			|| (parent.isValid() && parent.column() != 0))
 	{
 		return QModelIndex();
@@ -219,7 +274,7 @@ QModelIndex DictionaryModel::parent(const QModelIndex &child) const
 		DictionaryItem *parentItem = childItem->parent();
 		if (parentItem)
 		{
-			if (parentItem == rootItem)
+			if (parentItem == pRootItem)
 			{
 				return QModelIndex();
 			}
@@ -251,7 +306,7 @@ int DictionaryModel::columnCount(const QModelIndex &parent) const
 
 QVariant DictionaryModel::data(const QModelIndex &index, int role) const
 {
-	if (!rootItem || !index.isValid() || index.column() < 0 ||
+	if (!pRootItem || !index.isValid() || index.column() < 0 ||
 			index.column() >= ColumnCount)
 	{
 		return QVariant();
@@ -275,7 +330,7 @@ QVariant DictionaryModel::data(const QModelIndex &index, int role) const
 			return static_cast<int>(Qt::AlignLeft);
 		}
 
-		if ((role == Qt::DecorationRole) && (index.column() == EnglishColumn))
+		if ((role == Qt::DecorationRole) && (index.column() == PixmapColumn))
 		{
 			switch (item->type())
 			{
@@ -345,18 +400,16 @@ QVariant DictionaryModel::headerData(int section, Qt::Orientation orientation, i
 	}
 	switch (section)
 	{
-		case EnglishColumn:
-			return QString(tr("English"));
-		case RussiaColumn:
-			return QString(tr("Russian"));
-		default:
-			return QVariant();
+		case PixmapColumn: return QString();
+		case EnglishColumn: return QString(tr("English"));
+		case RussiaColumn: return QString(tr("Russian"));
+		default: return QVariant();
 	}
 }
 
 bool DictionaryModel::insertRows(int row, int count, const QModelIndex &parent)
 {
-	if (!rootItem)
+	if (!pRootItem)
 	{
 		return false;
 	}
@@ -367,11 +420,11 @@ bool DictionaryModel::insertRows(int row, int count, const QModelIndex &parent)
 
 bool DictionaryModel::removeRows(int row, int count, const QModelIndex &parent)
 {
-	if (!rootItem)
+	if (!pRootItem)
 	{
 		return false;
 	}
-	DictionaryItem *item = parent.isValid() ? itemForIndex(parent) : rootItem;
+	DictionaryItem *item = parent.isValid() ? itemForIndex(parent) : pRootItem;
 	beginRemoveRows(parent, row, row + count - 1);
 	for (int i = 0; i < count; ++i)
 	{
@@ -389,7 +442,7 @@ bool DictionaryModel::removeRows(int row, int count, const QModelIndex &parent)
 Qt::ItemFlags DictionaryModel::flags(const QModelIndex &index) const
 {
 	Qt::ItemFlags theFlags = QAbstractItemModel::flags(index);
-	if (index.isValid())
+	if (index.isValid() && index.column() != PixmapColumn)
 	{
 		theFlags |= Qt::ItemIsSelectable | Qt::ItemIsEditable;
 	}

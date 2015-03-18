@@ -39,7 +39,6 @@ MainWindow::MainWindow(QWidget *parent)
 	createToolBar();
 	createContextMenu();
 	createDictionaryView();
-
 	leavePermittedActions();
 }
 
@@ -59,10 +58,20 @@ void MainWindow::createFileActions()
 	actionSaveFile = new QAction(QIcon(":images/save_file"), tr("Save file"), this);
 	actionSaveAs = new QAction(QIcon(":images/save_file"), tr("Save as ..."), this);
 
+	actionNewFile->setShortcut(QKeySequence::New);
+	actionOpenFile->setShortcut(QKeySequence::Open);
+	actionSaveFile->setShortcut(QKeySequence::Save);
+	actionSaveAs->setShortcut(QKeySequence::SaveAs);
+
 	actionNewFile->setIconVisibleInMenu(true);
 	actionOpenFile->setIconVisibleInMenu(true);
 	actionSaveFile->setIconVisibleInMenu(true);
 	actionSaveAs->setIconVisibleInMenu(true);
+
+	actionNewFile->setToolTip(tr("Create new file"));
+	actionOpenFile->setToolTip(tr("Open file"));
+	actionSaveFile->setToolTip(tr("Save file"));
+	actionSaveAs->setToolTip(tr("Save file as ..."));
 
 	connect(actionNewFile, SIGNAL(triggered()), this, SLOT(onNewFile()));
 	connect(actionOpenFile, SIGNAL(triggered()), this, SLOT(onOpenFile()));
@@ -96,18 +105,15 @@ void MainWindow::createMoveActions()
 {
 	actionUp = new QAction(QIcon(":images/arrow_up"), tr("Up"), this);
 	actionDown = new QAction(QIcon(":images/arrow_down"), tr("Down"), this);
-	actionLeft = new QAction(QIcon(":images/arrow_left"), tr("Left"), this);
-	actionRight = new QAction(QIcon(":images/arrow_right"), tr("Right"), this);
 
 	actionUp->setIconVisibleInMenu(true);
 	actionDown->setIconVisibleInMenu(true);
-	actionLeft->setIconVisibleInMenu(true);
-	actionRight->setIconVisibleInMenu(true);
+
+	actionUp->setToolTip(tr("Move item up"));
+	actionDown->setToolTip(tr("Move item down"));
 
 	connect(actionUp, SIGNAL(triggered()), this, SLOT(onUp()));
 	connect(actionDown, SIGNAL(triggered()), this, SLOT(onDown()));
-	connect(actionLeft, SIGNAL(triggered()), this, SLOT(onLeft()));
-	connect(actionRight, SIGNAL(triggered()), this, SLOT(onRight()));
 }
 
 void MainWindow::createEditActions()
@@ -116,6 +122,10 @@ void MainWindow::createEditActions()
 	actionCopy = new QAction(QIcon(":images/copy"), tr("Copy"), this);
 	actionPaste = new QAction(QIcon(":images/paste"), tr("Paste"), this);
 
+	actionCut->setShortcut(QKeySequence::Cut);
+	actionCopy->setShortcut(QKeySequence::Copy);
+	actionPaste->setShortcut(QKeySequence::Paste);
+
 	actionCut->setIconVisibleInMenu(true);
 	actionCopy->setIconVisibleInMenu(true);
 	actionPaste->setIconVisibleInMenu(true);
@@ -123,6 +133,10 @@ void MainWindow::createEditActions()
 	connect(actionCut, SIGNAL(triggered()), this, SLOT(onCut()));
 	connect(actionCopy, SIGNAL(triggered()), this, SLOT(onCopy()));
 	connect(actionPaste, SIGNAL(triggered()), this, SLOT(onPaste()));
+
+	actionCut->setDisabled(true);
+	actionCopy->setDisabled(true);
+	actionPaste->setDisabled(true);
 
 }
 
@@ -163,8 +177,6 @@ void MainWindow::createEditMenu()
 	QMenu *moveMenu = editMenu->addMenu(QIcon(":images/drag_arrow"), tr("Move"));
 	moveMenu->addAction(actionUp);
 	moveMenu->addAction(actionDown);
-	moveMenu->addAction(actionLeft);
-	moveMenu->addAction(actionRight);
 
 	editMenu->addSeparator();
 	editMenu->addAction(actionCut);
@@ -231,8 +243,6 @@ void MainWindow::createMoveTool(QToolBar *toolBar)
 {
 	toolBar->addAction(actionUp);
 	toolBar->addAction(actionDown);
-	toolBar->addAction(actionLeft);
-	toolBar->addAction(actionRight);
 }
 
 void MainWindow::createIndexesToolBar()
@@ -290,6 +300,9 @@ void MainWindow::createContextMenu()
 	contextMenu = new QMenu;
 	contextMenu->addAction(actionRemove);
 	contextMenu->addMenu(menuAdd);
+	contextMenu->addAction(actionCut);
+	contextMenu->addAction(actionCopy);
+	contextMenu->addAction(actionPaste);
 
 	setContextMenuPolicy(Qt::CustomContextMenu);
 	connect(this, SIGNAL(customContextMenuRequested(QPoint)),
@@ -305,7 +318,9 @@ void MainWindow::createDictionaryView()
 	ExTreeView *treeView = new ExTreeView(this);
 	treeView->installEventFilter(this);
 	treeView->setModel(pModel);
-	treeView->normalizeColumnsWidth();
+	treeView->setColumnPercentWidth(0, 20);
+	treeView->setColumnPercentWidth(1, 40);
+	treeView->setColumnPercentWidth(2, 40);
 	connect(treeView, SIGNAL(pressed(QModelIndex)), this, SLOT(leavePermittedActions(QModelIndex)));
 
 	setCentralWidget(treeView);
@@ -428,29 +443,89 @@ void MainWindow::onRemove()
 	}
 }
 
+void MainWindow::onCut()
+{
+	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
+	if (treeView)
+	{
+		QModelIndex currentIndex = treeView->currentIndex();
+		if (currentIndex.isValid())
+		{
+			pModel->cutItem(currentIndex.row(), currentIndex.parent());
+		}
+		leavePermittedActions(treeView->currentIndex());
+	}
+}
+
+void MainWindow::onCopy()
+{
+	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
+	if (treeView)
+	{
+		QModelIndex currentIndex = treeView->currentIndex();
+		if (currentIndex.isValid())
+		{
+			pModel->copyItem(currentIndex.row(), currentIndex.parent());
+		}
+	}
+}
+
+void MainWindow::onPaste()
+{
+	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
+	if (treeView)
+	{
+		QModelIndex currentIndex = treeView->currentIndex();
+		pModel->pasteItem(currentIndex);
+		leavePermittedActions(treeView->currentIndex());
+	}
+}
+
 void MainWindow::leavePermittedActions(const QModelIndex &index)
 {
-	DictionaryItem::ItemType type = pModel->typeForIndex(index);
+	DictionaryItem::ItemType indexType = pModel->typeForIndex(index);
+
+	;
 
 	actionGroupAdd->actions()[DictionaryItem::ContextType]->setVisible(
-				type == DictionaryItem::ContextType ||
-				type == DictionaryItem::Invalid);
+				isPossiblePlugIn(DictionaryItem::ContextType, indexType));
 
 	actionGroupAdd->actions()[DictionaryItem::StringType]->setVisible(
-				type == DictionaryItem::ContextType ||
-				type == DictionaryItem::StringType ||
-				type == DictionaryItem::EnumType);
+				isPossiblePlugIn(DictionaryItem::StringType, indexType));
 
 	actionGroupAdd->actions()[DictionaryItem::EnumType]->setVisible(
-				type == DictionaryItem::ContextType ||
-				type == DictionaryItem::StringType ||
-				type == DictionaryItem::EnumType);
+				isPossiblePlugIn(DictionaryItem::EnumType, indexType));
 
 	actionGroupAdd->actions()[DictionaryItem::ArgType]->setVisible(
-				type == DictionaryItem::EnumType ||
-				type == DictionaryItem::ArgType);
+				isPossiblePlugIn(DictionaryItem::ArgType, indexType));
 
-	actionRemove->setDisabled(type == DictionaryItem::Invalid);
+	actionRemove->setDisabled(indexType == DictionaryItem::Invalid);
+	actionCut->setDisabled(indexType == DictionaryItem::Invalid);
+	actionCopy->setDisabled(indexType == DictionaryItem::Invalid);
+	DictionaryItem::ItemType cutItemType = pModel->typeForCutItem();
+	actionPaste->setEnabled(isPossiblePlugIn(cutItemType, indexType));
+}
+
+bool MainWindow::isPossiblePlugIn(DictionaryItem::ItemType plugInType, DictionaryItem::ItemType indexType)
+{
+	if (plugInType == DictionaryItem::ContextType)
+	{
+		return (indexType == DictionaryItem::Invalid ||
+				indexType == DictionaryItem::ContextType);
+	}
+	if (plugInType == DictionaryItem::StringType ||
+		plugInType == DictionaryItem::EnumType)
+	{
+		return (indexType == DictionaryItem::ContextType ||
+				indexType == DictionaryItem::StringType ||
+				indexType == DictionaryItem::EnumType);
+	}
+	if (plugInType == DictionaryItem::ArgType)
+	{
+		return (indexType == DictionaryItem::EnumType ||
+				indexType == DictionaryItem::ArgType);
+	}
+	return false;
 }
 
 void MainWindow::onCustomContextMenuRequested(const QPoint &point)

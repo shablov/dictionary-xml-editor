@@ -30,6 +30,17 @@ DictionaryItem::DictionaryItem(const QDomElement &domElement, DictionaryItem *pa
 	}
 }
 
+DictionaryItem::DictionaryItem(DictionaryItem *item, DictionaryItem *parent) : parentItem(parent)
+{
+	tagName = item->tagName;
+	engName = item->engName;
+	rusName = item->rusName;
+	foreach (DictionaryItem *childItem, item->childItems)
+	{
+		childItems << new DictionaryItem(childItem, this);
+	}
+}
+
 DictionaryItem::~DictionaryItem()
 {
 	qDeleteAll(childItems);
@@ -113,7 +124,9 @@ DictionaryItem *DictionaryItem::takeChild(const int &i)
 	{
 		return 0;
 	}
-	return childItems.takeAt(i);
+	DictionaryItem *childItem = childItems.takeAt(i);
+	childItem->setParent(0);
+	return childItem;
 }
 
 int DictionaryItem::rowOfChild(DictionaryItem *child) const

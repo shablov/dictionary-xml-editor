@@ -33,9 +33,14 @@ public:
 	DictionaryItem::ItemType typeForIndex(const QModelIndex &index) const;
 
 	void insertDictionaryItem(DictionaryItem::ItemType type, const QModelIndex &index);
+	void cutItem(const int &row, const QModelIndex &parent);
+	void copyItem(const int &row, const QModelIndex &parent);
+	DictionaryItem::ItemType typeForCutItem();
+	void pasteItem(const QModelIndex &index);
 
 private:
 	DictionaryItem *itemForIndex(const QModelIndex &index) const;
+	bool insertItem(DictionaryItem *itemForInsert, const QModelIndex &index);
 
 signals:
 	void error(DictionaryModel::ModelError code, const QString &description);
@@ -43,11 +48,13 @@ signals:
 private:
 	enum Columns
 	{
+		PixmapColumn,
 		EnglishColumn,
 		RussiaColumn,
 		ColumnCount
 	};
-	DictionaryItem *rootItem;
+	DictionaryItem *pRootItem;
+	DictionaryItem *pCutItem;
 
 	bool mIsModified;
 

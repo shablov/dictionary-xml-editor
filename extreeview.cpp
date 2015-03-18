@@ -8,6 +8,10 @@ ExTreeView::ExTreeView(QWidget *parent) :
 	QTreeView(parent)
 {
 	setHeader(new HeaderView(Qt::Horizontal, true, this));
+	header()->setSectionResizeMode(QHeaderView::Fixed);
+
+	connect(this, SIGNAL(collapsed(QModelIndex)), SLOT(setCurrentIndex(QModelIndex)));
+	connect(this, SIGNAL(expanded(QModelIndex)), SLOT(setCurrentIndex(QModelIndex)));
 }
 
 void ExTreeView::normalizeColumnsWidth()

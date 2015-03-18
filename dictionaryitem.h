@@ -22,6 +22,7 @@ public:
 	explicit DictionaryItem();
 	explicit DictionaryItem(ItemType typeForTagName, DictionaryItem *parent = 0);
 	explicit DictionaryItem(const QDomElement &domElement, DictionaryItem *parent = 0);
+	explicit DictionaryItem(DictionaryItem *item, DictionaryItem *parent = 0);
 	~DictionaryItem();
 
 	QString englishName() const;
