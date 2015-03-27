@@ -6,7 +6,7 @@ HeaderView::HeaderView(Qt::Orientation orientation, bool wrap, QWidget *parent) 
 	QHeaderView(orientation, parent)
 {
 	wrapping = wrap;
-#if QT_VERSION >= 050000
+#if QT_VERSION >= 0x050000
 	setSectionsClickable(true);
 #else
 	setClickable(true);
@@ -68,7 +68,7 @@ void HeaderView::paintSection(QPainter *painter, const QRect &rect, int logicalI
 		QVariant foregroundBrush = model()->headerData(logicalIndex, orientation(),
 													   Qt::ForegroundRole);
 
-#if QT_VERSION >= 050000
+#if QT_VERSION >= 0x050000
 		if (foregroundBrush.canConvert(QMetaType::QBrush))
 #else
 		if (qVariantCanConvert<QBrush>(foregroundBrush))
@@ -81,7 +81,7 @@ void HeaderView::paintSection(QPainter *painter, const QRect &rect, int logicalI
 		QVariant backgroundBrush = model()->headerData(logicalIndex, orientation(),
 													   Qt::BackgroundRole);
 
-#if QT_VERSION >= 050000
+#if QT_VERSION >= 0x050000
 		if (backgroundBrush.canConvert(QMetaType::QBrush))
 #else
 		if (qVariantCanConvert<QBrush>(backgroundBrush))
