@@ -29,9 +29,9 @@
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
-	setWindowTitle(tr("Dictionary editor"));
+	setWindowTitle(tr("Dictionary editor[*]"));
 	setWindowIcon(QIcon(":images/dictionary"));
-	setMinimumWidth(520);
+	setMinimumWidth(600);
 	setMinimumHeight(400);
 
 	createAction();
@@ -314,13 +314,17 @@ void MainWindow::createDictionaryView()
 	pModel = new DictionaryModel;
 	connect(pModel, SIGNAL(error(DictionaryModel::ModelError,QString)),
 			this, SLOT(onError(DictionaryModel::ModelError, QString)));
+	connect(pModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(onDataChanged()));
 
 	ExTreeView *treeView = new ExTreeView(this);
 	treeView->installEventFilter(this);
 	treeView->setModel(pModel);
-	treeView->setColumnPercentWidth(0, 20);
-	treeView->setColumnPercentWidth(1, 40);
-	treeView->setColumnPercentWidth(2, 40);
+	treeView->setColumnPercentWidth(DictionaryModel::PixmapColumn, 30);
+	treeView->setColumnPercentWidth(DictionaryModel::EnglishColumn, 35);
+	treeView->setColumnPercentWidth(DictionaryModel::RussiaColumn, 35);
+	treeView->setDragEnabled(true);
+	treeView->setDropIndicatorShown(true);
+	treeView->setAcceptDrops(true);
 	connect(treeView, SIGNAL(pressed(QModelIndex)), this, SLOT(leavePermittedActions(QModelIndex)));
 
 	setCentralWidget(treeView);
@@ -328,7 +332,7 @@ void MainWindow::createDictionaryView()
 
 bool MainWindow::maybeSave()
 {
-	if (!pModel->isModified())
+	if (!isWindowModified())
 	{
 		return true;
 	}
@@ -355,6 +359,7 @@ bool MainWindow::maybeSave()
 void MainWindow::setFileName(const QString &fileName)
 {
 	mFileName = fileName;
+	setWindowModified(false);
 }
 
 void MainWindow::onOpenFile()
@@ -443,6 +448,44 @@ void MainWindow::onRemove()
 	}
 }
 
+void MainWindow::onUp()
+{
+	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
+	if (treeView)
+	{
+		QModelIndex currentIndex = treeView->currentIndex();
+		if (currentIndex.isValid())
+		{
+			bool success = pModel->upItem(currentIndex.row(), currentIndex.parent());
+			if (success)
+			{
+				currentIndex = pModel->index(currentIndex.row() - 1, 0, currentIndex.parent());
+				treeView->setCurrentIndex(currentIndex);
+			}
+		}
+		leavePermittedActions(treeView->currentIndex());
+	}
+}
+
+void MainWindow::onDown()
+{
+	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
+	if (treeView)
+	{
+		QModelIndex currentIndex = treeView->currentIndex();
+		if (currentIndex.isValid())
+		{
+			bool success = pModel->downItem(currentIndex.row(), currentIndex.parent());
+			if (success)
+			{
+				currentIndex = pModel->index(currentIndex.row() + 1, 0, currentIndex.parent());
+				treeView->setCurrentIndex(currentIndex);
+			}
+		}
+		leavePermittedActions(treeView->currentIndex());
+	}
+}
+
 void MainWindow::onCut()
 {
 	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
@@ -485,8 +528,6 @@ void MainWindow::leavePermittedActions(const QModelIndex &index)
 {
 	DictionaryItem::ItemType indexType = pModel->typeForIndex(index);
 
-	;
-
 	actionGroupAdd->actions()[DictionaryItem::ContextType]->setVisible(
 				isPossiblePlugIn(DictionaryItem::ContextType, indexType));
 
@@ -504,6 +545,9 @@ void MainWindow::leavePermittedActions(const QModelIndex &index)
 	actionCopy->setDisabled(indexType == DictionaryItem::Invalid);
 	DictionaryItem::ItemType cutItemType = pModel->typeForCutItem();
 	actionPaste->setEnabled(isPossiblePlugIn(cutItemType, indexType));
+
+	actionUp->setEnabled(index.row() > 0);
+	actionDown->setEnabled(index.sibling(index.row() + 1, 0).isValid());
 }
 
 bool MainWindow::isPossiblePlugIn(DictionaryItem::ItemType plugInType, DictionaryItem::ItemType indexType)
@@ -548,6 +592,11 @@ void MainWindow::onError(DictionaryModel::ModelError, const QString &description
 {
 	QErrorMessage *message = QErrorMessage::qtHandler();
 	message->showMessage(description);
+}
+
+void MainWindow::onDataChanged()
+{
+	setWindowModified(true);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

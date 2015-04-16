@@ -4,6 +4,7 @@
 #include <QFile>
 
 #include <QDomElement>
+#include <QMimeData>
 #include <QXmlSchema>
 #include <QXmlSchemaValidator>
 
@@ -182,6 +183,32 @@ void DictionaryModel::pasteItem(const QModelIndex &index)
 	}
 }
 
+bool DictionaryModel::upItem(const int &itemRow, const QModelIndex &parent)
+{
+	DictionaryItem *parentItem = itemForIndex(parent);
+	if (!parentItem || (itemRow <= 0))
+	{
+		return false;
+	}
+	parentItem->moveChild(itemRow, itemRow - 1);
+	reset();
+	return true;
+}
+
+bool DictionaryModel::downItem(const int &itemRow, const QModelIndex &parent)
+{
+	DictionaryItem *parentItem = itemForIndex(parent);
+	if (!parentItem || (itemRow - 1 >= parentItem->childCount()))
+	{
+		return false;
+	}
+	parentItem->moveChild(itemRow, itemRow + 1);
+	reset();
+	return true;
+}
+
+
+
 DictionaryItem *DictionaryModel::itemForIndex(const QModelIndex &index) const
 {
 	if (index.isValid())
@@ -233,6 +260,7 @@ bool DictionaryModel::insertItem(DictionaryItem *itemForInsert, const QModelInde
 	parentItem->insertChild(row, itemForInsert);
 	insertRow(row, parentIndex);
 	mIsModified = true;
+	emit dataChanged(QModelIndex(), QModelIndex());
 	return true;
 }
 
@@ -299,9 +327,9 @@ int DictionaryModel::rowCount(const QModelIndex &parent) const
 	return parentItem ? parentItem->childCount() : 0;
 }
 
-int DictionaryModel::columnCount(const QModelIndex &parent) const
+int DictionaryModel::columnCount(const QModelIndex &) const
 {
-	return parent.isValid() && parent.column() != 0 ? 0 : ColumnCount;
+	return ColumnCount;
 }
 
 QVariant DictionaryModel::data(const QModelIndex &index, int role) const
@@ -318,10 +346,10 @@ QVariant DictionaryModel::data(const QModelIndex &index, int role) const
 		{
 			switch (index.column())
 			{
-				case EnglishColumn:
-					return item->englishName();
-				case RussiaColumn:
-					return item->russiaName();
+				case PixmapColumn: return item->type() == DictionaryItem::ArgType ? item->enumValue()
+																				  : QVariant();
+				case EnglishColumn: return item->englishName();
+				case RussiaColumn: return item->russiaName();
 			}
 		}
 
@@ -332,31 +360,8 @@ QVariant DictionaryModel::data(const QModelIndex &index, int role) const
 
 		if ((role == Qt::DecorationRole) && (index.column() == PixmapColumn))
 		{
-			switch (item->type())
-			{
-				case DictionaryItem::ContextType:
-				{
-					QPixmap pixmap(":images/context");
-					return pixmap.scaledToHeight(16, Qt::SmoothTransformation);
-				}
-				case DictionaryItem::ArgType:
-				{
-					QPixmap pixmap(":images/argument");
-					return pixmap.scaledToHeight(16, Qt::SmoothTransformation);
-				}
-				case DictionaryItem::EnumType:
-				{
-					QPixmap pixmap(":images/enum");
-					return pixmap.scaledToHeight(16, Qt::SmoothTransformation);
-				}
-				case DictionaryItem::StringType:
-				{
-					QPixmap pixmap(":images/string");
-					return pixmap.scaledToHeight(16, Qt::SmoothTransformation);
-				}
-				default:
-					break;
-			}
+			QPixmap pixmap = item->pixmap();
+			return pixmap.scaledToHeight(16, Qt::SmoothTransformation);
 		}
 	}
 	return QVariant();
@@ -373,13 +378,33 @@ bool DictionaryModel::setData(const QModelIndex &index, const QVariant &value, i
 	{
 		switch (static_cast<Columns>(index.column()))
 		{
+			case DictionaryModel::PixmapColumn:
+			{
+				quint32 enumValue = value.toUInt();
+				if (enumValue == item->enumValue())
+				{
+					return false;
+				}
+				item->setEnumValue(value.toUInt());
+				break;
+			}
 			case DictionaryModel::EnglishColumn:
 			{
+				QString engName = value.toString();
+				if (engName == item->englishName())
+				{
+					return false;
+				}
 				item->setEnglishName(value.toString());
 				break;
 			}
 			case DictionaryModel::RussiaColumn:
 			{
+				QString rusName = value.toString();
+				if (rusName == item->russiaName())
+				{
+					return false;
+				}
 				item->setRussiaName(value.toString());
 				break;
 			}
@@ -405,6 +430,26 @@ QVariant DictionaryModel::headerData(int section, Qt::Orientation orientation, i
 		case RussiaColumn: return QString(tr("Russian"));
 		default: return QVariant();
 	}
+}
+
+QStringList DictionaryModel::mimeTypes() const
+{
+	return QAbstractItemModel::mimeTypes();
+}
+
+QMimeData *DictionaryModel::mimeData(const QModelIndexList &indexes) const
+{
+	return QAbstractItemModel::mimeData(indexes);
+}
+
+bool DictionaryModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
+{
+	return QAbstractItemModel::dropMimeData(data, action, row, column, parent);
+}
+
+Qt::DropActions DictionaryModel::supportedDropActions() const
+{
+	return Qt::CopyAction | Qt::MoveAction;
 }
 
 bool DictionaryModel::insertRows(int row, int count, const QModelIndex &parent)
@@ -442,9 +487,14 @@ bool DictionaryModel::removeRows(int row, int count, const QModelIndex &parent)
 Qt::ItemFlags DictionaryModel::flags(const QModelIndex &index) const
 {
 	Qt::ItemFlags theFlags = QAbstractItemModel::flags(index);
-	if (index.isValid() && index.column() != PixmapColumn)
+	theFlags |= Qt::ItemIsDropEnabled;
+	if (index.isValid())
 	{
-		theFlags |= Qt::ItemIsSelectable | Qt::ItemIsEditable;
+		theFlags |= Qt::ItemIsDragEnabled;
+		if ((index.column() != PixmapColumn) || (typeForIndex(index) == DictionaryItem::ArgType))
+		{
+			theFlags |= Qt::ItemIsSelectable | Qt::ItemIsEditable;
+		}
 	}
 	return theFlags;
 }

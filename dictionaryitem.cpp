@@ -4,7 +4,7 @@
 
 
 DictionaryItem::DictionaryItem() :
-	tagName("dict"), engName(QString()), rusName(QString())
+	tagName("dict"), engName(QString()), rusName(QString()), mEnumValue(0)
 {
 }
 
@@ -19,6 +19,7 @@ DictionaryItem::DictionaryItem(const QDomElement &domElement, DictionaryItem *pa
 	tagName = domElement.tagName();
 	rusName = domElement.attribute("name_rus", QString());
 	engName = domElement.attribute("name_eng", QString());
+	mEnumValue = domElement.attribute("value", QString("0")).toUInt();
 
 	QDomNodeList childNodes = domElement.childNodes();
 	for (int i = 0; i < childNodes.count(); i++)
@@ -35,6 +36,7 @@ DictionaryItem::DictionaryItem(DictionaryItem *item, DictionaryItem *parent) : p
 	tagName = item->tagName;
 	engName = item->engName;
 	rusName = item->rusName;
+	mEnumValue = item->mEnumValue;
 	foreach (DictionaryItem *childItem, item->childItems)
 	{
 		childItems << new DictionaryItem(childItem, this);
@@ -59,6 +61,11 @@ QString DictionaryItem::russiaName() const
 DictionaryItem::ItemType DictionaryItem::type() const
 {
 	return typeForTagName(tagName);
+}
+
+quint32 DictionaryItem::enumValue() const
+{
+	return mEnumValue;
 }
 
 DictionaryItem::ItemType DictionaryItem::typeForTagName(const QString &tagName)
@@ -104,6 +111,11 @@ void DictionaryItem::setRussiaName(const QString &name)
 	rusName = name;
 }
 
+void DictionaryItem::setEnumValue(const quint32 &enumValue)
+{
+	mEnumValue = enumValue;
+}
+
 void DictionaryItem::setParent(DictionaryItem *parent)
 {
 	parentItem = parent;
@@ -145,6 +157,11 @@ void DictionaryItem::insertChild(const int &i, DictionaryItem *childItem)
 	childItems.insert(i, childItem);
 }
 
+void DictionaryItem::moveChild(const int &from, const int &to)
+{
+	childItems.move(from, to);
+}
+
 DictionaryItem *DictionaryItem::parent() const
 {
 	return parentItem;
@@ -160,6 +177,22 @@ void DictionaryItem::setElementAttributes(QDomElement &domElement) const
 	{
 		domElement.setAttribute("name_rus", rusName);
 	}
+	if (typeForTagName(tagName) == ArgType)
+	{
+		domElement.setAttribute("value", mEnumValue);
+	}
+}
+
+QPixmap DictionaryItem::pixmap()
+{
+	switch (type())
+	{
+		case ContextType: return QPixmap(":images/context");
+		case ArgType: return QPixmap(":images/argument");
+		case EnumType: return QPixmap(":images/enum");
+		case StringType: return QPixmap(":images/string");
+		default: return QPixmap();
+	}
 }
 
 QDomElement DictionaryItem::toDomElement(QDomDocument &domDocument) const
@@ -170,10 +203,6 @@ QDomElement DictionaryItem::toDomElement(QDomDocument &domDocument) const
 	{
 		const DictionaryItem *childItem = childItems.at(i);
 		QDomElement childElement = childItem->toDomElement(domDocument);
-		if (childItem->type() == ArgType)
-		{
-			childElement.setAttribute("value", i);
-		}
 		domElement.appendChild(childElement);
 	}
 	return domElement;

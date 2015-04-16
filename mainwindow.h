@@ -60,6 +60,9 @@ private slots:
 	void onAdd(QAction *action);
 	void onRemove();
 
+	void onUp();
+	void onDown();
+
 	void onCut();
 	void onCopy();
 	void onPaste();
@@ -69,6 +72,7 @@ private slots:
 
 
 	void onError(DictionaryModel::ModelError, const QString &description);
+	void onDataChanged();
 
 
 private:

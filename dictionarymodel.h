@@ -38,6 +38,17 @@ public:
 	DictionaryItem::ItemType typeForCutItem();
 	void pasteItem(const QModelIndex &index);
 
+	bool upItem(const int &itemRow, const QModelIndex &parent);
+	bool downItem(const int &itemRow, const QModelIndex &parent);
+
+	enum Columns
+	{
+		PixmapColumn,
+		EnglishColumn,
+		RussiaColumn,
+		ColumnCount
+	};
+
 private:
 	DictionaryItem *itemForIndex(const QModelIndex &index) const;
 	bool insertItem(DictionaryItem *itemForInsert, const QModelIndex &index);
@@ -46,13 +57,6 @@ signals:
 	void error(DictionaryModel::ModelError code, const QString &description);
 
 private:
-	enum Columns
-	{
-		PixmapColumn,
-		EnglishColumn,
-		RussiaColumn,
-		ColumnCount
-	};
 	DictionaryItem *pRootItem;
 	DictionaryItem *pCutItem;
 
@@ -66,13 +70,18 @@ public:
 	virtual QModelIndex index(int row, int column, const QModelIndex &parent) const;
 	virtual QModelIndex parent(const QModelIndex &child) const;
 	virtual int rowCount(const QModelIndex &parent) const;
-	virtual int columnCount(const QModelIndex &parent) const;
+	virtual int columnCount(const QModelIndex &) const;
 	virtual QVariant data(const QModelIndex &index, int role) const;
 	virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
 	virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
+	virtual QStringList mimeTypes() const;
+	virtual QMimeData *mimeData(const QModelIndexList &indexes) const;
+	virtual bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent);
+	virtual Qt::DropActions supportedDropActions() const;
 	virtual bool insertRows(int row, int count, const QModelIndex &parent);
 	virtual bool removeRows(int row, int count, const QModelIndex &parent);
 	virtual Qt::ItemFlags flags(const QModelIndex &index) const;
+public:
 };
 
 #endif // DICTIONARYMODEL_H
