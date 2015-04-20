@@ -37,6 +37,7 @@ public:
 	void setRussiaName(const QString &name);
 	void setEnumValue(const quint32 &enumValue);
 	void setParent(DictionaryItem *parent);
+	void setType(DictionaryItem::ItemType type);
 
 	DictionaryItem *childAt(const int &i) const;
 	DictionaryItem *takeChild(const int &i);
@@ -47,13 +48,16 @@ public:
 
 	DictionaryItem *parent() const;
 
-	QDomElement toDomElement(QDomDocument &domDocument) const;
 	QDomDocument toDomDocument() const;
-	void setElementAttributes(QDomElement &domElement) const;
 
 	QPixmap pixmap();
 
 private:
+	QDomElement toDomElement(QDomDocument &domDocument) const;
+	void setElementAttributes(QDomElement &domElement) const;
+
+	void changeType(DictionaryItem *childItem, DictionaryItem *parentItem);
+
 	QString tagName;
 
 	DictionaryItem *parentItem;
@@ -63,6 +67,11 @@ private:
 	QString rusName;
 
 	quint32 mEnumValue;
+
+public:
+	friend QDataStream &operator <<(QDataStream &in, DictionaryItem *item);
+	friend QDataStream &operator >>(QDataStream &out, DictionaryItem *item);
 };
+
 
 #endif // DICTIONARYITEM_H

@@ -50,19 +50,16 @@ private:
 
 private slots:
 	bool maybeSave();
+
 	void onOpenFile();
-
 	void onNewFile();
-
 	bool onSaveFile();
 	bool onSaveAs();
 
 	void onAdd(QAction *action);
 	void onRemove();
-
 	void onUp();
 	void onDown();
-
 	void onCut();
 	void onCopy();
 	void onPaste();
@@ -70,10 +67,7 @@ private slots:
 	void leavePermittedActions(const QModelIndex &index = QModelIndex());
 	void onCustomContextMenuRequested(const QPoint &point);
 
-
 	void onError(DictionaryModel::ModelError, const QString &description);
-	void onDataChanged();
-
 
 private:
 	QAction *actionNewFile;
@@ -84,10 +78,8 @@ private:
 	QMenu *menuAdd;
 	QActionGroup *actionGroupAdd;
 	QAction *actionRemove;
-
 	QAction *actionUp;
 	QAction *actionDown;
-
 	QAction *actionCut;
 	QAction *actionCopy;
 	QAction *actionPaste;

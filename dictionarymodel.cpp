@@ -44,7 +44,7 @@ bool DictionaryModel::load(const QString &fileName)
 	QDomElement rootElement = doc.documentElement();
 	pRootItem = new DictionaryItem(rootElement);
 	reset();
-	mIsModified = false;
+	emit modified(false);
 	return true;
 }
 
@@ -67,7 +67,7 @@ bool DictionaryModel::save(const QString &fileName)
 		return false;
 	}
 	file.write(data);
-	mIsModified = false;
+	emit modified(false);
 	return true;
 }
 
@@ -85,7 +85,7 @@ void DictionaryModel::createNew()
 		clear();
 	}
 	pRootItem = new DictionaryItem;
-	mIsModified = false;
+	emit modified(false);
 }
 
 bool DictionaryModel::validate(const QByteArray &data)
@@ -112,11 +112,6 @@ bool DictionaryModel::validate(const QByteArray &data)
 
 	/// TODO: не сделана проверка на повторяющиеся теги
 	return isValid;
-}
-
-bool DictionaryModel::isModified()
-{
-	return mIsModified;
 }
 
 DictionaryItem::ItemType DictionaryModel::typeForIndex(const QModelIndex &index) const
@@ -149,6 +144,7 @@ void DictionaryModel::cutItem(const int &row, const QModelIndex &parent)
 		pCutItem = 0;
 	}
 	pCutItem = parentItem->takeChild(row);
+	emit modified(true);
 	endRemoveRows();
 }
 
@@ -190,8 +186,11 @@ bool DictionaryModel::upItem(const int &itemRow, const QModelIndex &parent)
 	{
 		return false;
 	}
+	beginMoveRows(parent, itemRow, itemRow,
+				  parent, itemRow - 1);
 	parentItem->moveChild(itemRow, itemRow - 1);
-	reset();
+	emit modified(true);
+	endMoveRows();
 	return true;
 }
 
@@ -202,8 +201,11 @@ bool DictionaryModel::downItem(const int &itemRow, const QModelIndex &parent)
 	{
 		return false;
 	}
+	beginMoveRows(parent, itemRow, itemRow,
+				  parent, itemRow + 2);
 	parentItem->moveChild(itemRow, itemRow + 1);
-	reset();
+	emit modified(true);
+	endMoveRows();
 	return true;
 }
 
@@ -259,8 +261,6 @@ bool DictionaryModel::insertItem(DictionaryItem *itemForInsert, const QModelInde
 	row = (row == -1) ? parentItem->childCount() : (row + 1);
 	parentItem->insertChild(row, itemForInsert);
 	insertRow(row, parentIndex);
-	mIsModified = true;
-	emit dataChanged(QModelIndex(), QModelIndex());
 	return true;
 }
 
@@ -327,8 +327,9 @@ int DictionaryModel::rowCount(const QModelIndex &parent) const
 	return parentItem ? parentItem->childCount() : 0;
 }
 
-int DictionaryModel::columnCount(const QModelIndex &) const
+int DictionaryModel::columnCount(const QModelIndex &parent) const
 {
+	Q_UNUSED(parent);
 	return ColumnCount;
 }
 
@@ -412,7 +413,7 @@ bool DictionaryModel::setData(const QModelIndex &index, const QVariant &value, i
 				return false;
 		}
 		emit dataChanged(index, index);
-		return mIsModified = true;
+		emit modified(true);
 	}
 	return false;
 }
@@ -434,22 +435,93 @@ QVariant DictionaryModel::headerData(int section, Qt::Orientation orientation, i
 
 QStringList DictionaryModel::mimeTypes() const
 {
-	return QAbstractItemModel::mimeTypes();
+	QStringList types;
+	types << "dictionary/dictionaryitem.dat.bin";
+	return types;
 }
 
 QMimeData *DictionaryModel::mimeData(const QModelIndexList &indexes) const
 {
-	return QAbstractItemModel::mimeData(indexes);
+	QByteArray encodedData;
+	QDataStream in(&encodedData, QIODevice::WriteOnly);
+	foreach (QModelIndex index, indexes)
+	{
+		if (index.column() != 0)
+		{
+			continue;
+		}
+		DictionaryItem *item = itemForIndex(index);
+		if (item == pRootItem)
+		{
+			continue;
+		}
+		in << item;
+	}
+
+	QMimeData *mimeData = new QMimeData();
+	mimeData->setData("dictionary/dictionaryitem.dat.bin", encodedData);
+	return mimeData;
+}
+
+bool DictionaryModel::canDropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) const
+{
+	Q_UNUSED(row);
+	Q_UNUSED(column);
+	Q_UNUSED(parent);
+	if (!data->hasFormat("dictionary/dictionaryitem.dat.bin"))
+	{
+		return false;
+	}
+	if (action != Qt::IgnoreAction &&
+		action != Qt::MoveAction)
+	{
+		return false;
+	}
+	return true;
 }
 
 bool DictionaryModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
 {
-	return QAbstractItemModel::dropMimeData(data, action, row, column, parent);
+	if (!canDropMimeData(data, action, row, column, parent))
+	{
+		return false;
+	}
+	if (action == Qt::IgnoreAction)
+	{
+		return true;
+	}
+
+	DictionaryItem *parentItem = itemForIndex(parent);
+	QByteArray encodedData = data->data("dictionary/dictionaryitem.dat.bin");
+	QDataStream out(encodedData);
+	while (!out.atEnd())
+	{
+		DictionaryItem *item = new DictionaryItem;
+		out >> item;
+		if (item->type() == parentItem->type())
+		{
+			return false;
+		}
+		if (parentItem->type() == DictionaryItem::Invalid &&
+			item->type() != DictionaryItem::ContextType)
+		{
+			return false;
+		}
+
+		parentItem->insertChild(row, item);
+		insertRow(row, parent);
+	}
+	return true;
 }
 
 Qt::DropActions DictionaryModel::supportedDropActions() const
 {
-	return Qt::CopyAction | Qt::MoveAction;
+	return Qt::MoveAction;
+}
+
+Qt::DropActions DictionaryModel::supportedDragActions() const
+{
+	return Qt::MoveAction;
 }
 
 bool DictionaryModel::insertRows(int row, int count, const QModelIndex &parent)
@@ -460,6 +532,7 @@ bool DictionaryModel::insertRows(int row, int count, const QModelIndex &parent)
 	}
 	beginInsertRows(parent, row, row + count - 1);
 	endInsertRows();
+	emit modified(true);
 	return true;
 }
 
@@ -469,7 +542,7 @@ bool DictionaryModel::removeRows(int row, int count, const QModelIndex &parent)
 	{
 		return false;
 	}
-	DictionaryItem *item = parent.isValid() ? itemForIndex(parent) : pRootItem;
+	DictionaryItem *item = itemForIndex(parent);
 	beginRemoveRows(parent, row, row + count - 1);
 	for (int i = 0; i < count; ++i)
 	{
@@ -480,21 +553,29 @@ bool DictionaryModel::removeRows(int row, int count, const QModelIndex &parent)
 		}
 	}
 	endRemoveRows();
-	mIsModified = true;
+	emit modified(true);
 	return true;
 }
 
 Qt::ItemFlags DictionaryModel::flags(const QModelIndex &index) const
 {
 	Qt::ItemFlags theFlags = QAbstractItemModel::flags(index);
-	theFlags |= Qt::ItemIsDropEnabled;
-	if (index.isValid())
+	DictionaryItem *item = itemForIndex(index);
+	if (item == pRootItem)
 	{
-		theFlags |= Qt::ItemIsDragEnabled;
-		if ((index.column() != PixmapColumn) || (typeForIndex(index) == DictionaryItem::ArgType))
-		{
-			theFlags |= Qt::ItemIsSelectable | Qt::ItemIsEditable;
-		}
+		return theFlags | Qt::ItemIsDropEnabled;
+	}
+	if (item->type() != DictionaryItem::StringType &&
+		item->type() != DictionaryItem::ArgType)
+	{
+		theFlags |= Qt::ItemIsDropEnabled;
+	}
+	theFlags |= Qt::ItemIsDragEnabled;
+	theFlags |= Qt::ItemIsSelectable;
+	if (index.column() != PixmapColumn ||
+		item->type() == DictionaryItem::ArgType)
+	{
+		theFlags |= Qt::ItemIsEditable;
 	}
 	return theFlags;
 }

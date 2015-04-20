@@ -274,7 +274,6 @@ void MainWindow::createSearchTool(QToolBar *toolBar)
 	searchLineEdit->addAction(actionSearch);
 #endif
 	connect(actionSearch, SIGNAL(triggered()), searchLineEdit, SLOT(setFocus()));
-	connect(searchLineEdit, SIGNAL(textEdited(QString)), this, SLOT(onSearch(QString)));
 }
 
 void MainWindow::createFilterTool(QToolBar *toolBar)
@@ -314,7 +313,7 @@ void MainWindow::createDictionaryView()
 	pModel = new DictionaryModel;
 	connect(pModel, SIGNAL(error(DictionaryModel::ModelError,QString)),
 			this, SLOT(onError(DictionaryModel::ModelError, QString)));
-	connect(pModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(onDataChanged()));
+	connect(pModel, SIGNAL(modified(bool)), this, SLOT(setWindowModified(bool)));
 
 	ExTreeView *treeView = new ExTreeView(this);
 	treeView->installEventFilter(this);
@@ -325,6 +324,7 @@ void MainWindow::createDictionaryView()
 	treeView->setDragEnabled(true);
 	treeView->setDropIndicatorShown(true);
 	treeView->setAcceptDrops(true);
+	treeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
 	connect(treeView, SIGNAL(pressed(QModelIndex)), this, SLOT(leavePermittedActions(QModelIndex)));
 
 	setCentralWidget(treeView);
@@ -359,7 +359,6 @@ bool MainWindow::maybeSave()
 void MainWindow::setFileName(const QString &fileName)
 {
 	mFileName = fileName;
-	setWindowModified(false);
 }
 
 void MainWindow::onOpenFile()
@@ -592,11 +591,6 @@ void MainWindow::onError(DictionaryModel::ModelError, const QString &description
 {
 	QErrorMessage *message = QErrorMessage::qtHandler();
 	message->showMessage(description);
-}
-
-void MainWindow::onDataChanged()
-{
-	setWindowModified(true);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

@@ -119,6 +119,29 @@ void DictionaryItem::setEnumValue(const quint32 &enumValue)
 void DictionaryItem::setParent(DictionaryItem *parent)
 {
 	parentItem = parent;
+	if (!parent)
+	{
+		return;
+	}
+	changeType(this, parent);
+	parent->childItems.insert(parent->childCount(), this);
+}
+
+void DictionaryItem::changeType(DictionaryItem *childItem, DictionaryItem *parentItem)
+{
+	if (parentItem->type() == EnumType)
+	{
+		childItem->setType(ArgType);
+	}
+	if (parentItem->type() == ContextType && childItem->type() == ArgType)
+	{
+		childItem->setType(StringType);
+	}
+}
+
+void DictionaryItem::setType(DictionaryItem::ItemType type)
+{
+	tagName = tagNameForType(type);
 }
 
 DictionaryItem *DictionaryItem::childAt(const int &i) const
@@ -153,7 +176,12 @@ int DictionaryItem::childCount() const
 
 void DictionaryItem::insertChild(const int &i, DictionaryItem *childItem)
 {
-	childItem->setParent(this);
+	if (!childItem)
+	{
+		return;
+	}
+	childItem->parentItem = this;
+	changeType(childItem, this);
 	childItems.insert(i, childItem);
 }
 
@@ -215,4 +243,47 @@ QDomDocument DictionaryItem::toDomDocument() const
 	setElementAttributes(domElement);
 	domDocument.appendChild(domElement);
 	return domDocument;
+}
+
+
+QDataStream &operator <<(QDataStream &in, DictionaryItem *item)
+{
+	in << static_cast<quint8>(item->type());
+	in << item->englishName();
+	in << item->russiaName();
+	in << item->enumValue();
+	in << static_cast<quint32>(item->childCount());
+	foreach (DictionaryItem *childItem, item->childItems)
+	{
+		in << childItem;
+	}
+	return in;
+}
+
+QDataStream &operator >>(QDataStream &out, DictionaryItem *item)
+{
+	quint8 type = DictionaryItem::Invalid;
+	QString engName;
+	QString rusName;
+	quint32 enumValue = 0;
+	quint32 childCount = 0;
+
+	out >> type;
+	out >> engName;
+	out >> rusName;
+	out >> enumValue;
+
+	item->engName = engName;
+	item->rusName = rusName;
+	item->mEnumValue = enumValue;
+	item->tagName = DictionaryItem::tagNameForType(static_cast<DictionaryItem::ItemType>(type));
+
+	out >> childCount;
+	for (quint32 i = 0; i < childCount; i++)
+	{
+		DictionaryItem *childItem = new DictionaryItem;
+		out >> childItem;
+		item->insertChild(i, childItem);
+	}
+	return out;
 }
