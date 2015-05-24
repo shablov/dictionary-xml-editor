@@ -20,13 +20,19 @@ SOURCES += main.cpp\
     dictionarymodel.cpp \
     dictionaryitem.cpp \
     headerview.cpp \
-    extreeview.cpp
+    extreeview.cpp \
+    datachangedcommand.cpp \
+    insertitemcommand.cpp \
+    removeitemcommand.cpp
 
 HEADERS  += mainwindow.h \
     dictionarymodel.h \
     dictionaryitem.h \
     headerview.h \
-    extreeview.h
+    extreeview.h \
+    datachangedcommand.h \
+    insertitemcommand.h \
+    removeitemcommand.h
 
 RESOURCES += \
     resources.qrc

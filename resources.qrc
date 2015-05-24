@@ -21,6 +21,8 @@
         <file alias="string">images/string.png</file>
         <file alias="argument">images/argument.png</file>
         <file alias="context">images/context.png</file>
+        <file alias="redo">images/redo.png</file>
+        <file alias="undo">images/undo.png</file>
     </qresource>
     <qresource prefix="/files">
         <file alias="xsd_schema">files/dict_schema.xsd</file>

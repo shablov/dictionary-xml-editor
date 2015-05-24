@@ -31,7 +31,7 @@ public:
 
 	DictionaryItem::ItemType typeForIndex(const QModelIndex &index) const;
 
-	void insertDictionaryItem(DictionaryItem::ItemType type, const QModelIndex &index);
+	QModelIndex insertDictionaryItem(DictionaryItem::ItemType type, const QModelIndex &index);
 	void cutItem(const int &row, const QModelIndex &parent);
 	void copyItem(const int &row, const QModelIndex &parent);
 	DictionaryItem::ItemType typeForCutItem();
@@ -48,9 +48,10 @@ public:
 		ColumnCount
 	};
 
-private:
+	QVariant modifiedData() const;
+	int modifiedRole() const;
 	DictionaryItem *itemForIndex(const QModelIndex &index) const;
-	bool insertItem(DictionaryItem *itemForInsert, const QModelIndex &index);
+	QModelIndex insertItem(DictionaryItem *itemForInsert, const QModelIndex &index);
 
 signals:
 	void error(DictionaryModel::ModelError code, const QString &description);
@@ -59,6 +60,9 @@ signals:
 private:
 	DictionaryItem *pRootItem;
 	DictionaryItem *pCutItem;
+
+	QVariant mModifiedData;
+	int mModifiedRole;
 
 protected:
 	void reset();

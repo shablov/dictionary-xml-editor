@@ -124,14 +124,16 @@ DictionaryItem::ItemType DictionaryModel::typeForIndex(const QModelIndex &index)
 	return DictionaryItem::Invalid;
 }
 
-void DictionaryModel::insertDictionaryItem(DictionaryItem::ItemType type, const QModelIndex &index)
+QModelIndex DictionaryModel::insertDictionaryItem(DictionaryItem::ItemType type, const QModelIndex &index)
 {
 	DictionaryItem *item = new DictionaryItem(type);
-	if (!insertItem(item, index))
+	QModelIndex insertedIndex = insertItem(item, index);
+	if (!insertedIndex.isValid())
 	{
 		delete item;
 		item = 0;
 	}
+	return insertedIndex;
 }
 
 void DictionaryModel::cutItem(const int &row, const QModelIndex &parent)
@@ -172,7 +174,8 @@ DictionaryItem::ItemType DictionaryModel::typeForCutItem()
 void DictionaryModel::pasteItem(const QModelIndex &index)
 {
 	DictionaryItem *item = new DictionaryItem(pCutItem);
-	if (!insertItem(item, index))
+	QModelIndex insertedIndex = insertItem(item, index);
+	if (!insertedIndex.isValid())
 	{
 		delete item;
 		item = 0;
@@ -224,11 +227,11 @@ DictionaryItem *DictionaryModel::itemForIndex(const QModelIndex &index) const
 	return pRootItem;
 }
 
-bool DictionaryModel::insertItem(DictionaryItem *itemForInsert, const QModelIndex &index)
+QModelIndex DictionaryModel::insertItem(DictionaryItem *itemForInsert, const QModelIndex &index)
 {
 	if (!pRootItem)
 	{
-		return false;
+		return QModelIndex();
 	}
 	DictionaryItem *item = itemForIndex(index);
 	DictionaryItem *parentItem;
@@ -255,13 +258,23 @@ bool DictionaryModel::insertItem(DictionaryItem *itemForInsert, const QModelInde
 			break;
 		}
 		default:
-			return false;
+			return QModelIndex();
 	}
 	int row = parentItem->rowOfChild(item);
 	row = (row == -1) ? parentItem->childCount() : (row + 1);
 	parentItem->insertChild(row, itemForInsert);
 	insertRow(row, parentIndex);
-	return true;
+	return this->index(row, 0, parentIndex);
+}
+
+QVariant DictionaryModel::modifiedData() const
+{
+	return mModifiedData;
+}
+
+int DictionaryModel::modifiedRole() const
+{
+	return mModifiedRole;
 }
 
 void DictionaryModel::reset()
@@ -374,6 +387,8 @@ bool DictionaryModel::setData(const QModelIndex &index, const QVariant &value, i
 	{
 		return false;
 	}
+	mModifiedData = index.data(role);
+	mModifiedRole = role;
 	DictionaryItem *item = itemForIndex(index);
 	if (item)
 	{

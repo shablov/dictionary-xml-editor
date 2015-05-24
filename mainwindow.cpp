@@ -1,34 +1,32 @@
 #include "mainwindow.h"
 
 #include <QButtonGroup>
-#include <QCheckBox>
 #include <QErrorMessage>
-#include <QFile>
 #include <QFileDialog>
 #include <QLabel>
 #include <QLineEdit>
-#include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QRadioButton>
 #include <QToolBar>
 #include <QToolButton>
-#include <QTreeView>
-#include <QVBoxLayout>
-#include <QWidgetAction>
-#include <qevent.h>
+#include <QLayout>
+#include <QCloseEvent>
+#include <QUndoStack>
 
-#include <QtXmlPatterns/QXmlSchema>
-#include <QtXmlPatterns/QXmlSchemaValidator>
-
+#include "datachangedcommand.h"
 #include "extreeview.h"
 #include "headerview.h"
+#include "insertitemcommand.h"
+#include "removeitemcommand.h"
 
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
+	pUndoStack = new QUndoStack(this);
+
 	setWindowTitle(tr("Dictionary editor[*]"));
 	setWindowIcon(QIcon(":images/dictionary"));
 	setMinimumWidth(600);
@@ -118,6 +116,10 @@ void MainWindow::createMoveActions()
 
 void MainWindow::createEditActions()
 {
+	actionUndo = pUndoStack->createUndoAction(this, tr("Undo"));
+	actionUndo->setIcon(QIcon(":images/undo"));
+	actionRedo = pUndoStack->createRedoAction(this, tr("Redo"));
+	actionRedo->setIcon(QIcon(":images/redo"));
 	actionCut = new QAction(QIcon(":images/cut"), tr("Cut"), this);
 	actionCopy = new QAction(QIcon(":images/copy"), tr("Copy"), this);
 	actionPaste = new QAction(QIcon(":images/paste"), tr("Paste"), this);
@@ -125,10 +127,14 @@ void MainWindow::createEditActions()
 	actionCut->setShortcut(QKeySequence::Cut);
 	actionCopy->setShortcut(QKeySequence::Copy);
 	actionPaste->setShortcut(QKeySequence::Paste);
+	actionUndo->setShortcut(QKeySequence::Undo);
+	actionRedo->setShortcut(QKeySequence::Redo);
 
 	actionCut->setIconVisibleInMenu(true);
 	actionCopy->setIconVisibleInMenu(true);
 	actionPaste->setIconVisibleInMenu(true);
+	actionUndo->setIconVisibleInMenu(true);
+	actionRedo->setIconVisibleInMenu(true);
 
 	connect(actionCut, SIGNAL(triggered()), this, SLOT(onCut()));
 	connect(actionCopy, SIGNAL(triggered()), this, SLOT(onCopy()));
@@ -171,6 +177,10 @@ void MainWindow::createEditMenu()
 	createAddMenu();
 
 	QMenu *editMenu = menuBar()->addMenu(tr("Edit"));
+	editMenu->addAction(actionUndo);
+	editMenu->addAction(actionRedo);
+	editMenu->addSeparator();
+
 	editMenu->addMenu(menuAdd);
 	editMenu->addAction(actionRemove);
 
@@ -221,6 +231,9 @@ void MainWindow::createEditTool(QToolBar *toolBar)
 	toolBar->addAction(actionCut);
 	toolBar->addAction(actionCopy);
 	toolBar->addAction(actionPaste);
+	toolBar->addSeparator();
+	toolBar->addAction(actionUndo);
+	toolBar->addAction(actionRedo);
 	toolBar->addSeparator();
 	createItemsTool(toolBar);
 }
@@ -313,7 +326,8 @@ void MainWindow::createDictionaryView()
 	pModel = new DictionaryModel;
 	connect(pModel, SIGNAL(error(DictionaryModel::ModelError,QString)),
 			this, SLOT(onError(DictionaryModel::ModelError, QString)));
-	connect(pModel, SIGNAL(modified(bool)), this, SLOT(setWindowModified(bool)));
+	connect(pUndoStack, SIGNAL(cleanChanged(bool)), this, SLOT(onCleanChanged(bool)));
+	connect(pModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(onDataChanged(QModelIndex)));
 
 	ExTreeView *treeView = new ExTreeView(this);
 	treeView->installEventFilter(this);
@@ -428,7 +442,7 @@ void MainWindow::onAdd(QAction *action)
 	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
 	if (treeView)
 	{
-		pModel->insertDictionaryItem(type, treeView->currentIndex());
+		pUndoStack->push(new InsertItemCommand(treeView, type, treeView->currentIndex()));
 		leavePermittedActions(treeView->currentIndex());
 	}
 }
@@ -441,7 +455,7 @@ void MainWindow::onRemove()
 		QModelIndex currentIndex = treeView->currentIndex();
 		if (currentIndex.isValid())
 		{
-			pModel->removeRow(currentIndex.row(), currentIndex.parent());
+			pUndoStack->push(new RemoveItemCommand(treeView, currentIndex));
 		}
 		leavePermittedActions(treeView->currentIndex());
 	}
@@ -591,6 +605,16 @@ void MainWindow::onError(DictionaryModel::ModelError, const QString &description
 {
 	QErrorMessage *message = QErrorMessage::qtHandler();
 	message->showMessage(description);
+}
+
+void MainWindow::onCleanChanged(bool clean)
+{
+	setWindowModified(!clean);
+}
+
+void MainWindow::onDataChanged(const QModelIndex &index)
+{
+	pUndoStack->push(new DataChangedCommand(pModel, index, this));
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

@@ -8,6 +8,7 @@
 class QLineEdit;
 class QMenu;
 class QActionGroup;
+class QUndoStack;
 
 class MainWindow : public QMainWindow
 {
@@ -69,6 +70,9 @@ private slots:
 
 	void onError(DictionaryModel::ModelError, const QString &description);
 
+	void onCleanChanged(bool clean);
+	void onDataChanged(const QModelIndex& index);
+
 private:
 	QAction *actionNewFile;
 	QAction *actionOpenFile;
@@ -83,6 +87,8 @@ private:
 	QAction *actionCut;
 	QAction *actionCopy;
 	QAction *actionPaste;
+	QAction *actionUndo;
+	QAction *actionRedo ;
 
 	QAction *actionSearch;
 
@@ -93,6 +99,8 @@ private:
 	QString mFileName;
 
 	DictionaryModel *pModel;
+
+	QUndoStack *pUndoStack;
 
 	// QWidget interface
 protected:
