@@ -1,47 +1,31 @@
 #include "datachangedcommand.h"
+#include "QAbstractItemView"
 #include "mainwindow.h"
 
-DataChangedCommand::DataChangedCommand(QAbstractItemModel *model, const QModelIndex &index, MainWindow *w) : w(w)
+DataChangedCommand::DataChangedCommand(QAbstractItemView *view, const QModelIndex &index, MainWindow *w) :
+	ItemCommand(view, index), w(w)
 {
-	mIndex = index;
-	mParentIndex = mIndex.parent();
-	mGrandParentIndex = mParentIndex.parent();
-	mRootParentIndex = mGrandParentIndex.parent();
-
-	pModel = qobject_cast<DictionaryModel*>(model);
 	mOldValue = pModel->modifiedData();
 	mRole = pModel->modifiedRole();
-	mNewValue = index.data(mRole);
+	mNewValue = mIndex.data(mRole);
 }
 
 void DataChangedCommand::undo()
 {
-	command(mOldValue);
+	changeData(mOldValue);
 }
 
 void DataChangedCommand::redo()
 {
-	command(mNewValue);
+	changeData(mNewValue);
 }
 
-void DataChangedCommand::command(const QVariant &value)
+void DataChangedCommand::changeData(const QVariant &value)
 {
 	reinitializeIndexes();
 	QObject::disconnect(pModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), w, SLOT(onDataChanged(QModelIndex)));
 	pModel->setData(mIndex, value, mRole);
 	QObject::connect(pModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), w, SLOT(onDataChanged(QModelIndex)));
-}
-
-void DataChangedCommand::reinitializeIndexes()
-{
-	if (mGrandParentIndex.isValid())
-	{
-		mGrandParentIndex = pModel->index(mGrandParentIndex.row(), mGrandParentIndex.column(), mRootParentIndex);
-	}
-	if (mParentIndex.isValid())
-	{
-		mParentIndex = pModel->index(mParentIndex.row(), mParentIndex.column(), mGrandParentIndex);
-	}
-	mIndex = pModel->index(mIndex.row(), mIndex.column(), mParentIndex);
+	pView->scrollTo(mIndex);
 }
 

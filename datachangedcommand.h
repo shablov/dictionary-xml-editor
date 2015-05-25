@@ -1,16 +1,17 @@
 #ifndef DATACHANGEDCOMMAND_H
 #define DATACHANGEDCOMMAND_H
 
-#include <QUndoCommand>
+#include "itemcommand.h"
+
 #include <QModelIndex>
 
 class MainWindow;
 class DictionaryModel;
 
-class DataChangedCommand : public QUndoCommand
+class DataChangedCommand : public ItemCommand
 {
 public:
-	DataChangedCommand(QAbstractItemModel *model, const QModelIndex &index, MainWindow *w);
+	DataChangedCommand(QAbstractItemView *view, const QModelIndex &index, MainWindow *w);
 
 	// QUndoCommand interface
 public:
@@ -18,19 +19,12 @@ public:
 	void redo();
 
 private:
-	void command(const QVariant &value);
-	void reinitializeIndexes();
+	void changeData(const QVariant &value);
 
-	DictionaryModel *pModel;
 	MainWindow *w;
 	QVariant mNewValue;
 	QVariant mOldValue;
 	int mRole;
-
-	QModelIndex mIndex;
-	QModelIndex mParentIndex;
-	QModelIndex mGrandParentIndex;
-	QModelIndex mRootParentIndex;
 };
 
 #endif // DATACHANGEDCOMMAND_H

@@ -1,17 +1,16 @@
 #ifndef INSERTITEMCOMMAND_H
 #define INSERTITEMCOMMAND_H
 
-#include <QUndoCommand>
-#include <QModelIndex>
+#include "itemcommand.h"
 
 class QAbstractItemView;
 class DictionaryModel;
 class DictionaryItem;
 
-class InsertItemCommand : public QUndoCommand
+class InsertItemCommand : public ItemCommand
 {
 public:
-	InsertItemCommand(QAbstractItemView *view, int type, const QModelIndex &mIndex);
+	InsertItemCommand(QAbstractItemView *view, const QModelIndex &mIndex, int type);
 	~InsertItemCommand();
 	// QUndoCommand interface
 public:
@@ -19,16 +18,12 @@ public:
 	void redo();
 
 private:
-	void reinitializeIndexes();
-
-	QAbstractItemView *view;
-	DictionaryModel *pModel;
 	DictionaryItem *pItem;
-	QModelIndex mIndex;
-	QModelIndex mParentIndex;
-	QModelIndex mGrandParentIndex;
-	QModelIndex mRootParentIndex;
 	QModelIndex insertedIndex;
+
+	// ItemCommand interface
+protected:
+	virtual void reinitializeIndexes();
 };
 
 #endif // INSERTITEMCOMMAND_H

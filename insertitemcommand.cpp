@@ -1,16 +1,11 @@
 #include "insertitemcommand.h"
-
 #include "dictionarymodel.h"
 
 #include <QAbstractItemView>
 
-InsertItemCommand::InsertItemCommand(QAbstractItemView *view, int type, const QModelIndex &index) :
-	view(view), mIndex(index)
+InsertItemCommand::InsertItemCommand(QAbstractItemView *view, const QModelIndex &index, int type) :
+	ItemCommand(view, index)
 {
-	mParentIndex = mIndex.parent();
-	mGrandParentIndex = mParentIndex.parent();
-	mRootParentIndex = mGrandParentIndex.parent();
-	pModel = qobject_cast<DictionaryModel*>(view->model());
 	pItem = new DictionaryItem(static_cast<DictionaryItem::ItemType>(type));
 }
 
@@ -30,20 +25,22 @@ void InsertItemCommand::redo()
 {
 	reinitializeIndexes();
 	insertedIndex = pModel->insertItem(new DictionaryItem(pItem), mIndex);
-	view->scrollTo(insertedIndex);
-
+	if (insertedIndex.parent() == mIndex)
+	{
+		mParentIndex = insertedIndex.parent();
+		mGrandParentIndex = mParentIndex.parent();
+		mRootParentIndex = mGrandParentIndex.parent();
+	}
+	pView->scrollTo(insertedIndex);
 }
+
 
 void InsertItemCommand::reinitializeIndexes()
 {
-	if (mGrandParentIndex.isValid())
+	bool indexIsParent = (mParentIndex == mIndex);
+	ItemCommand::reinitializeIndexes();
+	if (indexIsParent)
 	{
-		mGrandParentIndex = pModel->index(mGrandParentIndex.row(), mGrandParentIndex.column(), mRootParentIndex);
+		mIndex = mParentIndex;
 	}
-	if (mParentIndex.isValid())
-	{
-		mParentIndex = pModel->index(mParentIndex.row(), mParentIndex.column(), mGrandParentIndex);
-	}
-	mIndex = pModel->index(mIndex.row(), mIndex.column(), mParentIndex);
 }
-

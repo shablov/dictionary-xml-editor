@@ -171,7 +171,7 @@ DictionaryItem::ItemType DictionaryModel::typeForCutItem()
 	return DictionaryItem::Invalid;
 }
 
-void DictionaryModel::pasteItem(const QModelIndex &index)
+QModelIndex DictionaryModel::pasteItem(const QModelIndex &index)
 {
 	DictionaryItem *item = new DictionaryItem(pCutItem);
 	QModelIndex insertedIndex = insertItem(item, index);
@@ -180,36 +180,37 @@ void DictionaryModel::pasteItem(const QModelIndex &index)
 		delete item;
 		item = 0;
 	}
+	return insertedIndex;
 }
 
-bool DictionaryModel::upItem(const int &itemRow, const QModelIndex &parent)
+QModelIndex DictionaryModel::upItem(int itemRow, const QModelIndex &parent)
 {
 	DictionaryItem *parentItem = itemForIndex(parent);
-	if (!parentItem || (itemRow <= 0))
+	if (parentItem && (itemRow > 0))
 	{
-		return false;
+		beginMoveRows(parent, itemRow, itemRow,
+					  parent, itemRow - 1);
+		parentItem->moveChild(itemRow, itemRow - 1);
+		endMoveRows();
+		--itemRow;
 	}
-	beginMoveRows(parent, itemRow, itemRow,
-				  parent, itemRow - 1);
-	parentItem->moveChild(itemRow, itemRow - 1);
 	emit modified(true);
-	endMoveRows();
-	return true;
+	return index(itemRow, 0, parent);
 }
 
-bool DictionaryModel::downItem(const int &itemRow, const QModelIndex &parent)
+QModelIndex DictionaryModel::downItem(int itemRow, const QModelIndex &parent)
 {
 	DictionaryItem *parentItem = itemForIndex(parent);
-	if (!parentItem || (itemRow - 1 >= parentItem->childCount()))
+	if (parentItem && (itemRow < parentItem->childCount()))
 	{
-		return false;
+		beginMoveRows(parent, itemRow, itemRow,
+					  parent, itemRow + 2);
+		parentItem->moveChild(itemRow, itemRow + 1);
+		endMoveRows();
+		++itemRow;
 	}
-	beginMoveRows(parent, itemRow, itemRow,
-				  parent, itemRow + 2);
-	parentItem->moveChild(itemRow, itemRow + 1);
 	emit modified(true);
-	endMoveRows();
-	return true;
+	return index(itemRow, 0, parent);
 }
 
 

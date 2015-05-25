@@ -14,11 +14,13 @@
 #include <QCloseEvent>
 #include <QUndoStack>
 
+#include "cutpasteitemcommand.h"
 #include "datachangedcommand.h"
 #include "extreeview.h"
 #include "headerview.h"
 #include "insertitemcommand.h"
 #include "removeitemcommand.h"
+#include "updownitemcommand.h"
 
 #include <QDebug>
 
@@ -339,7 +341,8 @@ void MainWindow::createDictionaryView()
 	treeView->setDropIndicatorShown(true);
 	treeView->setAcceptDrops(true);
 	treeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
-	connect(treeView, SIGNAL(pressed(QModelIndex)), this, SLOT(leavePermittedActions(QModelIndex)));
+	connect(treeView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)), this, SLOT(leavePermittedActions()));
+	connect(pModel, SIGNAL(modified(bool)), this, SLOT(leavePermittedActions()));
 
 	setCentralWidget(treeView);
 }
@@ -442,74 +445,43 @@ void MainWindow::onAdd(QAction *action)
 	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
 	if (treeView)
 	{
-		pUndoStack->push(new InsertItemCommand(treeView, type, treeView->currentIndex()));
-		leavePermittedActions(treeView->currentIndex());
+		pUndoStack->push(new InsertItemCommand(treeView, treeView->currentIndex(), type));
 	}
 }
 
 void MainWindow::onRemove()
 {
 	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
-	if (treeView)
+	if (treeView && treeView->currentIndex().isValid())
 	{
-		QModelIndex currentIndex = treeView->currentIndex();
-		if (currentIndex.isValid())
-		{
-			pUndoStack->push(new RemoveItemCommand(treeView, currentIndex));
-		}
-		leavePermittedActions(treeView->currentIndex());
+		pUndoStack->push(new RemoveItemCommand(treeView, treeView->currentIndex()));
 	}
 }
 
 void MainWindow::onUp()
 {
 	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
-	if (treeView)
+	if (treeView && treeView->currentIndex().isValid())
 	{
-		QModelIndex currentIndex = treeView->currentIndex();
-		if (currentIndex.isValid())
-		{
-			bool success = pModel->upItem(currentIndex.row(), currentIndex.parent());
-			if (success)
-			{
-				currentIndex = pModel->index(currentIndex.row() - 1, 0, currentIndex.parent());
-				treeView->setCurrentIndex(currentIndex);
-			}
-		}
-		leavePermittedActions(treeView->currentIndex());
+		pUndoStack->push(new UpDownItemCommand(treeView, treeView->currentIndex(), UpDownItemCommand::UpMove));
 	}
 }
 
 void MainWindow::onDown()
 {
 	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
-	if (treeView)
+	if (treeView && treeView->currentIndex().isValid())
 	{
-		QModelIndex currentIndex = treeView->currentIndex();
-		if (currentIndex.isValid())
-		{
-			bool success = pModel->downItem(currentIndex.row(), currentIndex.parent());
-			if (success)
-			{
-				currentIndex = pModel->index(currentIndex.row() + 1, 0, currentIndex.parent());
-				treeView->setCurrentIndex(currentIndex);
-			}
-		}
-		leavePermittedActions(treeView->currentIndex());
+		pUndoStack->push(new UpDownItemCommand(treeView, treeView->currentIndex(), UpDownItemCommand::DownMove));
 	}
 }
 
 void MainWindow::onCut()
 {
 	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
-	if (treeView)
+	if (treeView && treeView->currentIndex().isValid())
 	{
-		QModelIndex currentIndex = treeView->currentIndex();
-		if (currentIndex.isValid())
-		{
-			pModel->cutItem(currentIndex.row(), currentIndex.parent());
-		}
-		leavePermittedActions(treeView->currentIndex());
+		pUndoStack->push(new CutItemCommand(treeView, treeView->currentIndex()));
 	}
 }
 
@@ -529,16 +501,20 @@ void MainWindow::onCopy()
 void MainWindow::onPaste()
 {
 	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
-	if (treeView)
+	if (treeView && treeView->currentIndex().isValid())
 	{
-		QModelIndex currentIndex = treeView->currentIndex();
-		pModel->pasteItem(currentIndex);
-		leavePermittedActions(treeView->currentIndex());
+		pUndoStack->push(new PasteItemCommand(treeView, treeView->currentIndex()));
 	}
 }
 
-void MainWindow::leavePermittedActions(const QModelIndex &index)
+void MainWindow::leavePermittedActions()
 {
+	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
+	QModelIndex index;
+	if (treeView)
+	{
+		index = treeView->currentIndex();
+	}
 	DictionaryItem::ItemType indexType = pModel->typeForIndex(index);
 
 	actionGroupAdd->actions()[DictionaryItem::ContextType]->setVisible(
@@ -596,7 +572,6 @@ void MainWindow::onCustomContextMenuRequested(const QPoint &point)
 	if (treeView)
 	{
 		QPoint globalPoint = mapToGlobal(point);
-		leavePermittedActions(treeView->currentIndex());
 		contextMenu->exec(globalPoint);
 	}
 }
@@ -614,7 +589,11 @@ void MainWindow::onCleanChanged(bool clean)
 
 void MainWindow::onDataChanged(const QModelIndex &index)
 {
-	pUndoStack->push(new DataChangedCommand(pModel, index, this));
+	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
+	if (treeView)
+	{
+		pUndoStack->push(new DataChangedCommand(treeView, index, this));
+	}
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

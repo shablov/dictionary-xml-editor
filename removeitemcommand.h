@@ -1,18 +1,17 @@
 #ifndef REMOVEITEMCOMMAND_H
 #define REMOVEITEMCOMMAND_H
 
-#include <QUndoCommand>
-#include <QModelIndex>
+#include "itemcommand.h"
 
 class DictionaryItem;
 class DictionaryModel;
 class QAbstractItemView;
 
 
-class RemoveItemCommand : public QUndoCommand
+class RemoveItemCommand : public ItemCommand
 {
 public:
-	RemoveItemCommand(QAbstractItemView *view, QModelIndex &index);
+	RemoveItemCommand(QAbstractItemView *view, const QModelIndex &index);
 	~RemoveItemCommand();
 
 	// QUndoCommand interface
@@ -21,15 +20,8 @@ public:
 	virtual void redo();
 
 private:
-	void reinitializeIndexes();
-
-	QAbstractItemView *pView;
-	DictionaryModel *pModel;
 	DictionaryItem *pItem;
-	QModelIndex mIndex;
-	QModelIndex mParentIndex;
-	QModelIndex mGrandParentIndex;
-	QModelIndex mRootParentIndex;
+	bool isExpanded;
 };
 
 #endif // REMOVEITEMCOMMAND_H

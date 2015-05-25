@@ -35,10 +35,10 @@ public:
 	void cutItem(const int &row, const QModelIndex &parent);
 	void copyItem(const int &row, const QModelIndex &parent);
 	DictionaryItem::ItemType typeForCutItem();
-	void pasteItem(const QModelIndex &index);
+	QModelIndex pasteItem(const QModelIndex &index);
 
-	bool upItem(const int &itemRow, const QModelIndex &parent);
-	bool downItem(const int &itemRow, const QModelIndex &parent);
+	QModelIndex upItem(int itemRow, const QModelIndex &parent);
+	QModelIndex downItem(int itemRow, const QModelIndex &parent);
 
 	enum Columns
 	{

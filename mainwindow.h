@@ -65,8 +65,8 @@ private slots:
 	void onCopy();
 	void onPaste();
 
-	void leavePermittedActions(const QModelIndex &index = QModelIndex());
 	void onCustomContextMenuRequested(const QPoint &point);
+	void leavePermittedActions();
 
 	void onError(DictionaryModel::ModelError, const QString &description);
 

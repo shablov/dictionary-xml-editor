@@ -23,7 +23,10 @@ SOURCES += main.cpp\
     extreeview.cpp \
     datachangedcommand.cpp \
     insertitemcommand.cpp \
-    removeitemcommand.cpp
+    removeitemcommand.cpp \
+    itemcommand.cpp \
+    updownitemcommand.cpp \
+    cutpasteitemcommand.cpp
 
 HEADERS  += mainwindow.h \
     dictionarymodel.h \
@@ -32,7 +35,10 @@ HEADERS  += mainwindow.h \
     extreeview.h \
     datachangedcommand.h \
     insertitemcommand.h \
-    removeitemcommand.h
+    removeitemcommand.h \
+    itemcommand.h \
+    updownitemcommand.h \
+    cutpasteitemcommand.h
 
 RESOURCES += \
     resources.qrc
