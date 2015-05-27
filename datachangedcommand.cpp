@@ -2,8 +2,8 @@
 #include "QAbstractItemView"
 #include "mainwindow.h"
 
-DataChangedCommand::DataChangedCommand(QAbstractItemView *view, const QModelIndex &index, MainWindow *w) :
-	ItemCommand(view, index), w(w)
+DataChangedCommand::DataChangedCommand(QAbstractItemView *view, const QModelIndex &index) :
+	ItemCommand(view, index)
 {
 	mOldValue = pModel->modifiedData();
 	mRole = pModel->modifiedRole();
@@ -22,10 +22,10 @@ void DataChangedCommand::redo()
 
 void DataChangedCommand::changeData(const QVariant &value)
 {
+	pModel->startUndo();
 	reinitializeIndexes();
-	QObject::disconnect(pModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), w, SLOT(onDataChanged(QModelIndex)));
 	pModel->setData(mIndex, value, mRole);
-	QObject::connect(pModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), w, SLOT(onDataChanged(QModelIndex)));
 	pView->scrollTo(mIndex);
+	pModel->stopUndo();
 }
 

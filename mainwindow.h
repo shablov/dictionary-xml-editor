@@ -19,6 +19,7 @@ public:
 
 private:
 	void createAction();
+	void updateRecentFileActions();
 	void createFileActions();
 	void createItemsActions();
 	void createMoveActions();
@@ -45,6 +46,7 @@ private:
 	void createDictionaryView();
 
 	void setFileName(const QString &fileName);
+	void loadFile(const QString &fileName);
 	bool saveToFile(const QString &fileName);
 
 	bool isPossiblePlugIn(DictionaryItem::ItemType plugInType, DictionaryItem::ItemType indexType);
@@ -53,6 +55,7 @@ private slots:
 	bool maybeSave();
 
 	void onOpenFile();
+	void onOpenRecentFile();
 	void onNewFile();
 	bool onSaveFile();
 	bool onSaveAs();
@@ -71,7 +74,7 @@ private slots:
 	void onError(DictionaryModel::ModelError, const QString &description);
 
 	void onCleanChanged(bool clean);
-	void onDataChanged(const QModelIndex& index);
+	void onModifiedData(const QModelIndex& index);
 
 private:
 	QAction *actionNewFile;
@@ -90,8 +93,10 @@ private:
 	QAction *actionUndo;
 	QAction *actionRedo ;
 
-	QAction *actionSearch;
+	enum { MaxRecentFiles = 5 };
+	QAction *recentFilesActions[MaxRecentFiles];
 
+	QAction *actionSearch;
 	QLineEdit *searchLineEdit;
 
 	QMenu *contextMenu;

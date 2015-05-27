@@ -9,7 +9,8 @@
 #include <QXmlSchemaValidator>
 
 DictionaryModel::DictionaryModel(QObject *parent) :
-	QAbstractItemModel(parent), pRootItem(0), pCutItem(0)
+	QAbstractItemModel(parent), pRootItem(0), pCutItem(0),
+	isUndoStop(true)
 {
 	createNew();
 }
@@ -268,6 +269,16 @@ QModelIndex DictionaryModel::insertItem(DictionaryItem *itemForInsert, const QMo
 	return this->index(row, 0, parentIndex);
 }
 
+void DictionaryModel::startUndo()
+{
+	isUndoStop = false;
+}
+
+void DictionaryModel::stopUndo()
+{
+	isUndoStop = true;
+}
+
 QVariant DictionaryModel::modifiedData() const
 {
 	return mModifiedData;
@@ -427,6 +438,10 @@ bool DictionaryModel::setData(const QModelIndex &index, const QVariant &value, i
 			}
 			default:
 				return false;
+		}
+		if (isUndoStop)
+		{
+			emit modifiedData(index);
 		}
 		emit dataChanged(index, index);
 		emit modified(true);

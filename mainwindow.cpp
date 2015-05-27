@@ -13,6 +13,7 @@
 #include <QLayout>
 #include <QCloseEvent>
 #include <QUndoStack>
+#include <QSettings>
 
 #include "cutpasteitemcommand.h"
 #include "datachangedcommand.h"
@@ -57,6 +58,14 @@ void MainWindow::createFileActions()
 	actionOpenFile = new QAction(QIcon(":images/open_file"), tr("Open file"), this);
 	actionSaveFile = new QAction(QIcon(":images/save_file"), tr("Save file"), this);
 	actionSaveAs = new QAction(QIcon(":images/save_file"), tr("Save as ..."), this);
+
+	for (int i = 0; i < MaxRecentFiles; ++i)
+	{
+		recentFilesActions[i] = new QAction(this);
+		recentFilesActions[i]->setVisible(false);
+		connect(recentFilesActions[i], SIGNAL(triggered()), this, SLOT(onOpenRecentFile()));
+	}
+	updateRecentFileActions();
 
 	actionNewFile->setShortcut(QKeySequence::New);
 	actionOpenFile->setShortcut(QKeySequence::Open);
@@ -168,10 +177,34 @@ void MainWindow::createFileMenu()
 	fileMenu->addAction(actionOpenFile);
 	fileMenu->addAction(actionSaveFile);
 	fileMenu->addAction(actionSaveAs);
+	QMenu *recentFilesMenu = fileMenu->addMenu(tr("Recent files..."));
+	for (int i = 0; i < MaxRecentFiles; i++)
+	{
+		recentFilesMenu->addAction(recentFilesActions[i]);
+	}
 	fileMenu->addSeparator();
 	QAction *actionExit = fileMenu->addAction(QIcon(":images/exit"), tr("Exit"));
 	actionExit->setIconVisibleInMenu(true);
 	connect(actionExit, SIGNAL(triggered()), this, SLOT(close()));
+}
+
+void MainWindow::updateRecentFileActions()
+{
+	QSettings settings;
+	QStringList files = settings.value("recentFileList").toStringList();
+	int numRecentFiles = qMin(files.size(), (int)MaxRecentFiles);
+	for (int i = 0; i < numRecentFiles; ++i)
+	{
+		QString text = tr("&%1 %2").arg(i + 1).arg(QFileInfo(files[i]).fileName());
+		recentFilesActions[i]->setText(text);
+		recentFilesActions[i]->setData(files[i]);
+		recentFilesActions[i]->setVisible(true);
+	}
+	for (int j = numRecentFiles; j < MaxRecentFiles; ++j)
+	{
+		recentFilesActions[j]->setVisible(false);
+	}
+
 }
 
 void MainWindow::createEditMenu()
@@ -329,7 +362,7 @@ void MainWindow::createDictionaryView()
 	connect(pModel, SIGNAL(error(DictionaryModel::ModelError,QString)),
 			this, SLOT(onError(DictionaryModel::ModelError, QString)));
 	connect(pUndoStack, SIGNAL(cleanChanged(bool)), this, SLOT(onCleanChanged(bool)));
-	connect(pModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(onDataChanged(QModelIndex)));
+	connect(pModel, SIGNAL(modifiedData(QModelIndex)), this, SLOT(onModifiedData(QModelIndex)));
 
 	ExTreeView *treeView = new ExTreeView(this);
 	treeView->installEventFilter(this);
@@ -376,6 +409,30 @@ bool MainWindow::maybeSave()
 void MainWindow::setFileName(const QString &fileName)
 {
 	mFileName = fileName;
+	if (mFileName.isEmpty())
+	{
+		return;
+	}
+
+	QSettings settings;
+	QStringList files = settings.value("recentFileList").toStringList();
+	files.removeAll(mFileName);
+	files.prepend(mFileName);
+	while (files.size() > MaxRecentFiles)
+	{
+		files.removeLast();
+	}
+	settings.setValue("recentFileList", files);
+	updateRecentFileActions();
+}
+
+void MainWindow::loadFile(const QString &fileName)
+{
+	if ((!fileName.isEmpty()) && (pModel) && (pModel->load(fileName)))
+	{
+		setFileName(fileName);
+		pUndoStack->clear();
+	}
 }
 
 void MainWindow::onOpenFile()
@@ -386,9 +443,15 @@ void MainWindow::onOpenFile()
 	}
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
 													QDir::currentPath(), tr("Xml (*.xml)"));
-	if ((!fileName.isEmpty()) && (pModel) && (pModel->load(fileName)))
+	loadFile(fileName);
+}
+
+void MainWindow::onOpenRecentFile()
+{
+	QAction *action = qobject_cast<QAction*>(sender());
+	if (action)
 	{
-		setFileName(fileName);
+		loadFile(action->data().toString());
 	}
 }
 
@@ -403,6 +466,7 @@ void MainWindow::onNewFile()
 	{
 		pModel->createNew();
 		setFileName(QString());
+		pUndoStack->clear();
 	}
 }
 
@@ -411,6 +475,7 @@ bool MainWindow::saveToFile(const QString &fileName)
 	if ((pModel) && (pModel->save(fileName)))
 	{
 		setFileName(fileName);
+		pUndoStack->clear();
 		return true;
 	}
 	return false;
@@ -587,12 +652,12 @@ void MainWindow::onCleanChanged(bool clean)
 	setWindowModified(!clean);
 }
 
-void MainWindow::onDataChanged(const QModelIndex &index)
+void MainWindow::onModifiedData(const QModelIndex &index)
 {
 	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
 	if (treeView)
 	{
-		pUndoStack->push(new DataChangedCommand(treeView, index, this));
+		pUndoStack->push(new DataChangedCommand(treeView, index));
 	}
 }
 

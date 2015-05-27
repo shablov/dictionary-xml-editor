@@ -53,9 +53,13 @@ public:
 	DictionaryItem *itemForIndex(const QModelIndex &index) const;
 	QModelIndex insertItem(DictionaryItem *itemForInsert, const QModelIndex &index);
 
+	void startUndo();
+	void stopUndo();
+
 signals:
 	void error(DictionaryModel::ModelError code, const QString &description);
 	void modified(bool);
+	void modifiedData(const QModelIndex &index);
 
 private:
 	DictionaryItem *pRootItem;
@@ -63,6 +67,7 @@ private:
 
 	QVariant mModifiedData;
 	int mModifiedRole;
+	bool isUndoStop;
 
 protected:
 	void reset();

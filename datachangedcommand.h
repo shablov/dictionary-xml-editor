@@ -11,7 +11,7 @@ class DictionaryModel;
 class DataChangedCommand : public ItemCommand
 {
 public:
-	DataChangedCommand(QAbstractItemView *view, const QModelIndex &index, MainWindow *w);
+	DataChangedCommand(QAbstractItemView *view, const QModelIndex &index);
 
 	// QUndoCommand interface
 public:
@@ -21,7 +21,6 @@ public:
 private:
 	void changeData(const QVariant &value);
 
-	MainWindow *w;
 	QVariant mNewValue;
 	QVariant mOldValue;
 	int mRole;
