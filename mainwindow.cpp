@@ -374,6 +374,10 @@ void MainWindow::createDictionaryView()
 	treeView->setDropIndicatorShown(true);
 	treeView->setAcceptDrops(true);
 	treeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+//	treeView->setHeader(new QHeaderView(Qt::Horizontal));
+	treeView->header()->setSortIndicatorShown(true);
+	treeView->header()->setSortIndicator(DictionaryModel::EnglishColumn, Qt::DescendingOrder);
+	treeView->header()->setClickable(true);
 	connect(treeView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)), this, SLOT(leavePermittedActions()));
 	connect(pModel, SIGNAL(modified(bool)), this, SLOT(leavePermittedActions()));
 
