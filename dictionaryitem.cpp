@@ -1,6 +1,7 @@
 #include "dictionaryitem.h"
 
 #include <QDomElement>
+#include <QCoreApplication>
 
 
 DictionaryItem::DictionaryItem() :
@@ -98,6 +99,18 @@ QByteArray DictionaryItem::tagNameForType(DictionaryItem::ItemType type)
 		case DictionaryItem::EnumType: return "enum";
 		case DictionaryItem::ArgType: return "arg";
 		default: return QByteArray();
+	}
+}
+
+QString DictionaryItem::ruTagNameForType(DictionaryItem::ItemType type)
+{
+	switch (type)
+	{
+		case DictionaryItem::ContextType: return QCoreApplication::translate("DictionaryItem", "context");
+		case DictionaryItem::StringType: return QCoreApplication::translate("DictionaryItem", "string");
+		case DictionaryItem::EnumType: return QCoreApplication::translate("DictionaryItem", "enum");
+		case DictionaryItem::ArgType: return QCoreApplication::translate("DictionaryItem", "arg");
+		default: return QString();
 	}
 }
 

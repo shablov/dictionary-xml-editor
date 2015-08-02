@@ -151,6 +151,11 @@ void DictionaryModel::cutItem(const int &row, const QModelIndex &parent)
 	endRemoveRows();
 }
 
+DictionaryItem *DictionaryModel::cuttedItem()
+{
+	return pCutItem;
+}
+
 void DictionaryModel::copyItem(const int &row, const QModelIndex &parent)
 {
 

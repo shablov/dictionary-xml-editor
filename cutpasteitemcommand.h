@@ -28,8 +28,11 @@ public:
 	virtual void redo();
 
 private:
-	QModelIndex insertedIndex;
 	DictionaryItem *pPasteItem;
+
+	// ItemCommand interface
+protected:
+	virtual void reinitializeIndexes();
 };
 
 #endif // CUTITEMCOMMAND_H

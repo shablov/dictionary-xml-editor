@@ -33,6 +33,7 @@ public:
 
 	QModelIndex insertDictionaryItem(DictionaryItem::ItemType type, const QModelIndex &index);
 	void cutItem(const int &row, const QModelIndex &parent);
+	DictionaryItem *cuttedItem();
 	void copyItem(const int &row, const QModelIndex &parent);
 	DictionaryItem::ItemType typeForCutItem();
 	QModelIndex pasteItem(const QModelIndex &index);

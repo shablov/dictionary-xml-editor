@@ -34,7 +34,6 @@ void InsertItemCommand::redo()
 	pView->scrollTo(insertedIndex);
 }
 
-
 void InsertItemCommand::reinitializeIndexes()
 {
 	bool indexIsParent = (mParentIndex == mIndex);

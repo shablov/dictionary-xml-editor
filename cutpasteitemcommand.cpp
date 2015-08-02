@@ -24,28 +24,32 @@ void CutItemCommand::undo()
 		mIndex = pModel->upItem(mIndex.row(), mParentIndex);
 		pView->scrollTo(mIndex);
 	}
+	else
+	{
+		mIndex = pModel->insertItem(new DictionaryItem(pCutItem), mIndex);
+		pView->scrollTo(mIndex);
+	}
 }
 
 void CutItemCommand::redo()
 {
 	reinitializeIndexes();
+	pModel->cutItem(mIndex.row(), mParentIndex);
 	if (!pCutItem)
 	{
-		pCutItem = new DictionaryItem(pModel->itemForIndex(mIndex));
+		pCutItem = new DictionaryItem(pModel->cuttedItem());
 	}
-	pModel->cutItem(mIndex.row(), mParentIndex);
 }
 
 
 PasteItemCommand::PasteItemCommand(QAbstractItemView *view, const QModelIndex &index) :
-	ItemCommand(view, index), pPasteItem(0)
+	ItemCommand(view, index)
 {
+	pPasteItem = new DictionaryItem(pModel->cuttedItem());
 }
 
 PasteItemCommand::~PasteItemCommand()
 {
-	delete pPasteItem;
-	pPasteItem = 0;
 }
 
 void PasteItemCommand::undo()
@@ -58,9 +62,22 @@ void PasteItemCommand::undo()
 void PasteItemCommand::redo()
 {
 	reinitializeIndexes();
-	insertedIndex = pModel->pasteItem(mIndex);
-	if (insertedIndex.isValid() && !pPasteItem)
+	insertedIndex = pModel->insertItem(new DictionaryItem(pPasteItem), mIndex);
+	if (insertedIndex.parent() == mIndex)
 	{
-		pPasteItem = new DictionaryItem(pModel->itemForIndex(insertedIndex));
+		mParentIndex = insertedIndex.parent();
+		mGrandParentIndex = mParentIndex.parent();
+		mRootParentIndex = mGrandParentIndex.parent();
+	}
+	pView->scrollTo(insertedIndex);
+}
+
+void PasteItemCommand::reinitializeIndexes()
+{
+	bool indexIsParent = (mParentIndex == mIndex);
+	ItemCommand::reinitializeIndexes();
+	if (indexIsParent)
+	{
+		mIndex = mParentIndex;
 	}
 }

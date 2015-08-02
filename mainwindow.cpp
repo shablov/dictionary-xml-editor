@@ -93,8 +93,8 @@ void MainWindow::createItemsActions()
 	actionGroupAdd = new QActionGroup(this);
 	for (int i = 0; i < DictionaryItem::Invalid; i++)
 	{
-		QByteArray actionName = DictionaryItem::tagNameForType(static_cast<DictionaryItem::ItemType>(i));
-		QAction *actionAdd =  new QAction(QIcon(":images/add_element"), tr("Add " + actionName), this);
+		QString actionName = DictionaryItem::ruTagNameForType(static_cast<DictionaryItem::ItemType>(i));
+		QAction *actionAdd =  new QAction(QIcon(":images/add_element"), tr("Add") + " " + actionName, this);
 		actionAdd->setIconVisibleInMenu(true);
 		actionAdd->setData(i);
 		actionAdd->setVisible(false);
@@ -195,7 +195,7 @@ void MainWindow::updateRecentFileActions()
 	int numRecentFiles = qMin(files.size(), (int)MaxRecentFiles);
 	for (int i = 0; i < numRecentFiles; ++i)
 	{
-		QString text = tr("&%1 %2").arg(i + 1).arg(QFileInfo(files[i]).fileName());
+		QString text = QString("&%1 %2").arg(i + 1).arg(QFileInfo(files[i]).fileName());
 		recentFilesActions[i]->setText(text);
 		recentFilesActions[i]->setData(files[i]);
 		recentFilesActions[i]->setVisible(true);
@@ -390,8 +390,8 @@ bool MainWindow::maybeSave()
 	{
 		return true;
 	}
-	int buttonRole = QMessageBox::information(this, "Dictionary is modified",
-											  "Do you want to save the changes you made to Dictionary?",
+	int buttonRole = QMessageBox::information(this, tr("Dictionary is modified"),
+											  tr("Do you want to save the changes you made to Dictionary?"),
 											  QMessageBox::Yes, QMessageBox::No, QMessageBox::Cancel);
 	switch (buttonRole)
 	{

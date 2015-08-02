@@ -42,3 +42,5 @@ HEADERS  += mainwindow.h \
 
 RESOURCES += \
     resources.qrc
+
+TRANSLATIONS += ru_RU.ts
