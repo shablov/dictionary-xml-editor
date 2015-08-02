@@ -28,7 +28,14 @@ void HeaderView::paintSection(QPainter *painter, const QRect &rect, int logicalI
 {
 	if(wrapping)
 	{
+		if (!rect.isValid())
+		{
+			return;
+		}
+
+		// get the state of the section
 		QStyleOptionHeader opt;
+		initStyleOption(&opt);
 		QStyle::State state = QStyle::State_None;
 		if (isEnabled())
 		{
@@ -38,18 +45,24 @@ void HeaderView::paintSection(QPainter *painter, const QRect &rect, int logicalI
 		{
 			state |= QStyle::State_Active;
 		}
+
+
 		if (isSortIndicatorShown() && sortIndicatorSection() == logicalIndex)
 		{
 			opt.sortIndicator = (sortIndicatorOrder() == Qt::AscendingOrder)
-					? QStyleOptionHeader::SortDown : QStyleOptionHeader::SortUp;
+								? QStyleOptionHeader::SortDown : QStyleOptionHeader::SortUp;
 		}
 
+		// setup the style options structure
 		QVariant textAlignment = model()->headerData(logicalIndex, orientation(),
 													 Qt::TextAlignmentRole);
 		opt.rect = rect;
 		opt.section = logicalIndex;
 		opt.state |= state;
-		opt.textAlignment = Qt::Alignment(textAlignment.toInt());
+		opt.textAlignment = Qt::Alignment(textAlignment.isValid()
+										  ? Qt::Alignment(textAlignment.toInt())
+										  : defaultAlignment());
+
 		opt.iconAlignment = Qt::AlignVCenter;
 		opt.text = model()->headerData(logicalIndex, orientation(),
 									   Qt::DisplayRole).toString();
@@ -67,7 +80,6 @@ void HeaderView::paintSection(QPainter *painter, const QRect &rect, int logicalI
 		}
 		QVariant foregroundBrush = model()->headerData(logicalIndex, orientation(),
 													   Qt::ForegroundRole);
-
 #if QT_VERSION >= 0x050000
 		if (foregroundBrush.canConvert(QMetaType::QBrush))
 #else
@@ -80,7 +92,6 @@ void HeaderView::paintSection(QPainter *painter, const QRect &rect, int logicalI
 		QPointF oldBO = painter->brushOrigin();
 		QVariant backgroundBrush = model()->headerData(logicalIndex, orientation(),
 													   Qt::BackgroundRole);
-
 #if QT_VERSION >= 0x050000
 		if (backgroundBrush.canConvert(QMetaType::QBrush))
 #else
@@ -92,20 +103,39 @@ void HeaderView::paintSection(QPainter *painter, const QRect &rect, int logicalI
 			painter->setBrushOrigin(opt.rect.topLeft());
 		}
 
+		// the section position
 		int visual = visualIndex(logicalIndex);
 		Q_ASSERT(visual != -1);
 		if (count() == 1)
+		{
 			opt.position = QStyleOptionHeader::OnlyOneSection;
+		}
 		else if (visual == 0)
+		{
 			opt.position = QStyleOptionHeader::Beginning;
+		}
 		else if (visual == count() - 1)
+		{
 			opt.position = QStyleOptionHeader::End;
+		}
 		else
+		{
 			opt.position = QStyleOptionHeader::Middle;
+		}
 		opt.orientation = orientation();
 
+		// draw the section
 		style()->drawControl(QStyle::CE_HeaderSection, &opt, painter, this);
-		style()->drawItemText(painter, rect, Qt::TextWordWrap | Qt::AlignCenter, style()->standardPalette(), true, opt.text);
+		// draw the text
+		QRect headerLabelRect = style()->subElementRect(QStyle::SE_HeaderLabel, &opt, this);
+		style()->drawItemText(painter, headerLabelRect, Qt::TextWordWrap | Qt::AlignCenter, style()->standardPalette(), true, opt.text);
+
+		// draw the indicators if need
+		if (isSortIndicatorShown() && sortIndicatorSection() == logicalIndex)
+		{
+			opt.rect = style()->subElementRect(QStyle::SE_HeaderArrow, &opt, this);
+			style()->drawPrimitive(QStyle::PE_IndicatorHeaderArrow, &opt, painter, this);
+		}
 
 		painter->setBrushOrigin(oldBO);
 	}

@@ -11,7 +11,6 @@ public:
 
 	void normalizeColumnsWidth();
 	void setColumnPercentWidth(int col, int percent);
-
 private:
 	QMap<int, int> mColumnsPercentWidth;
 

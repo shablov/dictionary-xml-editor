@@ -43,4 +43,4 @@ HEADERS  += mainwindow.h \
 RESOURCES += \
     resources.qrc
 
-TRANSLATIONS += ru_RU.ts
+TRANSLATIONS += files/dictionary_ru.ts

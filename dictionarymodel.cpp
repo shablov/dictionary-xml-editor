@@ -118,7 +118,7 @@ bool DictionaryModel::validate(const QByteArray &data)
 DictionaryItem::ItemType DictionaryModel::typeForIndex(const QModelIndex &index) const
 {
 	DictionaryItem *item = itemForIndex(index);
-	if (item)
+	if (item && item != pRootItem)
 	{
 		return item->type();
 	}
@@ -458,14 +458,14 @@ QVariant DictionaryModel::headerData(int section, Qt::Orientation orientation, i
 {
 	if ((orientation != Qt::Horizontal) || (role != Qt::DisplayRole))
 	{
-		return QVariant();
+		return QAbstractItemModel::headerData(section, orientation, role);
 	}
 	switch (section)
 	{
 		case PixmapColumn: return QString();
 		case EnglishColumn: return QString(tr("English"));
 		case RussiaColumn: return QString(tr("Russian"));
-		default: return QVariant();
+		default: return QAbstractItemModel::headerData(section, orientation, role);
 	}
 }
 

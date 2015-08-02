@@ -101,7 +101,6 @@ void MainWindow::createItemsActions()
 		actionGroupAdd->addAction(actionAdd);
 	}
 
-
 	actionRemove = new QAction(QIcon(":images/remove_element"), tr("Remove"), this);
 	actionRemove->setIconVisibleInMenu(true);
 	actionRemove->setShortcut(QKeySequence::Delete);
@@ -370,14 +369,24 @@ void MainWindow::createDictionaryView()
 	treeView->setColumnPercentWidth(DictionaryModel::PixmapColumn, 30);
 	treeView->setColumnPercentWidth(DictionaryModel::EnglishColumn, 35);
 	treeView->setColumnPercentWidth(DictionaryModel::RussiaColumn, 35);
+
+	/// Drag'n'Drop
 	treeView->setDragEnabled(true);
-	treeView->setDropIndicatorShown(true);
-	treeView->setAcceptDrops(true);
-	treeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
-//	treeView->setHeader(new QHeaderView(Qt::Horizontal));
-	treeView->header()->setSortIndicatorShown(true);
-	treeView->header()->setSortIndicator(DictionaryModel::EnglishColumn, Qt::DescendingOrder);
-	treeView->header()->setClickable(true);
+
+//	/// Sorting in model
+//	treeView->setDropIndicatorShown(true);
+//	treeView->setAcceptDrops(true);
+//	treeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+//	treeView->setSortingEnabled(true);
+//	treeView->sortByColumn(DictionaryModel::EnglishColumn);
+//	treeView->header()->setSortIndicatorShown(true);
+//	treeView->header()->setSortIndicator(DictionaryModel::EnglishColumn, Qt::DescendingOrder);
+//#if QT_VERSION >= 0x050000
+//	treeView->header()->setSectionsClickable(true);
+//#else
+//	treeView->header()->setClickable(true);
+//#endif
+
 	connect(treeView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)), this, SLOT(leavePermittedActions()));
 	connect(pModel, SIGNAL(modified(bool)), this, SLOT(leavePermittedActions()));
 
@@ -453,7 +462,7 @@ void MainWindow::onOpenFile()
 void MainWindow::onOpenRecentFile()
 {
 	QAction *action = qobject_cast<QAction*>(sender());
-	if (action)
+	if (action && maybeSave())
 	{
 		loadFile(action->data().toString());
 	}

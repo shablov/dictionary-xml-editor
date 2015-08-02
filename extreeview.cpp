@@ -3,7 +3,6 @@
 
 #include <QKeyEvent>
 
-
 ExTreeView::ExTreeView(QWidget *parent) :
 	QTreeView(parent)
 {
