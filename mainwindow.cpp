@@ -93,14 +93,13 @@ void MainWindow::createItemsActions()
 	actionGroupAdd = new QActionGroup(this);
 	for (int i = 0; i < DictionaryItem::Invalid; i++)
 	{
-		QByteArray actionName = DictionaryItem::tagNameForType(static_cast<DictionaryItem::ItemType>(i));
-		QAction *actionAdd =  new QAction(QIcon(":images/add_element"), tr("Add " + actionName), this);
+		QString actionName = DictionaryItem::ruTagNameForType(static_cast<DictionaryItem::ItemType>(i));
+		QAction *actionAdd =  new QAction(QIcon(":images/add_element"), tr("Add") + " " + actionName, this);
 		actionAdd->setIconVisibleInMenu(true);
 		actionAdd->setData(i);
 		actionAdd->setVisible(false);
 		actionGroupAdd->addAction(actionAdd);
 	}
-
 
 	actionRemove = new QAction(QIcon(":images/remove_element"), tr("Remove"), this);
 	actionRemove->setIconVisibleInMenu(true);
@@ -195,7 +194,7 @@ void MainWindow::updateRecentFileActions()
 	int numRecentFiles = qMin(files.size(), (int)MaxRecentFiles);
 	for (int i = 0; i < numRecentFiles; ++i)
 	{
-		QString text = tr("&%1 %2").arg(i + 1).arg(QFileInfo(files[i]).fileName());
+		QString text = QString("&%1 %2").arg(i + 1).arg(QFileInfo(files[i]).fileName());
 		recentFilesActions[i]->setText(text);
 		recentFilesActions[i]->setData(files[i]);
 		recentFilesActions[i]->setVisible(true);
@@ -370,10 +369,24 @@ void MainWindow::createDictionaryView()
 	treeView->setColumnPercentWidth(DictionaryModel::PixmapColumn, 30);
 	treeView->setColumnPercentWidth(DictionaryModel::EnglishColumn, 35);
 	treeView->setColumnPercentWidth(DictionaryModel::RussiaColumn, 35);
+
+	/// Drag'n'Drop
 	treeView->setDragEnabled(true);
 	treeView->setDropIndicatorShown(true);
 	treeView->setAcceptDrops(true);
-	treeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+
+//	/// Sorting in model
+//	treeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+//	treeView->setSortingEnabled(true);
+//	treeView->sortByColumn(DictionaryModel::EnglishColumn);
+//	treeView->header()->setSortIndicatorShown(true);
+//	treeView->header()->setSortIndicator(DictionaryModel::EnglishColumn, Qt::DescendingOrder);
+//#if QT_VERSION >= 0x050000
+//	treeView->header()->setSectionsClickable(true);
+//#else
+//	treeView->header()->setClickable(true);
+//#endif
+
 	connect(treeView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)), this, SLOT(leavePermittedActions()));
 	connect(pModel, SIGNAL(modified(bool)), this, SLOT(leavePermittedActions()));
 
@@ -386,8 +399,8 @@ bool MainWindow::maybeSave()
 	{
 		return true;
 	}
-	int buttonRole = QMessageBox::information(this, "Dictionary is modified",
-											  "Do you want to save the changes you made to Dictionary?",
+	int buttonRole = QMessageBox::information(this, tr("Dictionary is modified"),
+											  tr("Do you want to save the changes you made to Dictionary?"),
 											  QMessageBox::Yes, QMessageBox::No, QMessageBox::Cancel);
 	switch (buttonRole)
 	{
@@ -449,7 +462,7 @@ void MainWindow::onOpenFile()
 void MainWindow::onOpenRecentFile()
 {
 	QAction *action = qobject_cast<QAction*>(sender());
-	if (action)
+	if (action && maybeSave())
 	{
 		loadFile(action->data().toString());
 	}

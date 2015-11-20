@@ -68,6 +68,7 @@ bool DictionaryModel::save(const QString &fileName)
 		return false;
 	}
 	file.write(data);
+	file.close();
 	emit modified(false);
 	return true;
 }
@@ -97,8 +98,10 @@ bool DictionaryModel::validate(const QByteArray &data)
 		emit error(XsdSchemaOpenedError, file.errorString());
 		return false;
 	}
+	QByteArray fileContent = file.readAll();
+	file.close();
 	QXmlSchema schema;
-	if (!schema.load(file.readAll()))
+	if (!schema.load(fileContent))
 	{
 		emit error(InvalidXsdSchema, QString("Loading is failed"));
 		return false;
@@ -118,7 +121,7 @@ bool DictionaryModel::validate(const QByteArray &data)
 DictionaryItem::ItemType DictionaryModel::typeForIndex(const QModelIndex &index) const
 {
 	DictionaryItem *item = itemForIndex(index);
-	if (item)
+	if (item && item != pRootItem)
 	{
 		return item->type();
 	}
@@ -149,6 +152,11 @@ void DictionaryModel::cutItem(const int &row, const QModelIndex &parent)
 	pCutItem = parentItem->takeChild(row);
 	emit modified(true);
 	endRemoveRows();
+}
+
+DictionaryItem *DictionaryModel::cuttedItem()
+{
+	return pCutItem;
 }
 
 void DictionaryModel::copyItem(const int &row, const QModelIndex &parent)
@@ -307,7 +315,7 @@ QModelIndex DictionaryModel::index(int row, int column, const QModelIndex &paren
 		return QModelIndex();
 	}
 	DictionaryItem *parentItem = itemForIndex(parent);
-	Q_ASSERT(parentItem);
+	Q_ASSERT_X(parentItem != 0, Q_FUNC_INFO, "not parent");
 	if (DictionaryItem *item = parentItem->childAt(row))
 	{
 		return createIndex(row, column, item);
@@ -453,14 +461,14 @@ QVariant DictionaryModel::headerData(int section, Qt::Orientation orientation, i
 {
 	if ((orientation != Qt::Horizontal) || (role != Qt::DisplayRole))
 	{
-		return QVariant();
+		return QAbstractItemModel::headerData(section, orientation, role);
 	}
 	switch (section)
 	{
 		case PixmapColumn: return QString();
 		case EnglishColumn: return QString(tr("English"));
 		case RussiaColumn: return QString(tr("Russian"));
-		default: return QVariant();
+		default: return QAbstractItemModel::headerData(section, orientation, role);
 	}
 }
 

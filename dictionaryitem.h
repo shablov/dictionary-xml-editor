@@ -32,6 +32,7 @@ public:
 	ItemType type() const;
 	static ItemType typeForTagName(const QString &tagName);
 	static QByteArray tagNameForType(ItemType typeForTagName);
+	static QString ruTagNameForType(DictionaryItem::ItemType type);
 
 	void setEnglishName(const QString &name);
 	void setRussiaName(const QString &name);

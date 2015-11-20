@@ -3,7 +3,6 @@
 
 #include <QKeyEvent>
 
-
 ExTreeView::ExTreeView(QWidget *parent) :
 	QTreeView(parent)
 {
@@ -38,7 +37,7 @@ void ExTreeView::normalizeColumnsWidth()
 
 	int percent = 100 / columns.count();
 
-	foreach(int col, columns)
+	foreach(const int &col, columns)
 	{
 		mColumnsPercentWidth[col] = percent;
 	}
@@ -60,10 +59,11 @@ void ExTreeView::resizeEvent(QResizeEvent *event)
 
 	double widthPercent = viewport()->width() / 100.0;
 
-	foreach(int col, mColumnsPercentWidth.keys())
+	QMapIterator<int, int> i(mColumnsPercentWidth);
+	while (i.hasNext())
 	{
-		int colWidth = widthPercent * mColumnsPercentWidth[col];
-		setColumnWidth(col, colWidth);
+		i.next();
+		setColumnWidth(i.key(), widthPercent * i.value());
 	}
 }
 

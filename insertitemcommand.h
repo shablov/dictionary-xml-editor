@@ -19,7 +19,6 @@ public:
 
 private:
 	DictionaryItem *pItem;
-	QModelIndex insertedIndex;
 
 	// ItemCommand interface
 protected:

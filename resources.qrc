@@ -26,5 +26,7 @@
     </qresource>
     <qresource prefix="/files">
         <file alias="xsd_schema">files/dict_schema.xsd</file>
+        <file alias="dictionary_translator_ru_RU">files/dictionary_ru.qm</file>
+        <file>files/dictionary_ru.ts</file>
     </qresource>
 </RCC>
