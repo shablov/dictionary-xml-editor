@@ -41,6 +41,6 @@ HEADERS  += mainwindow.h \
     cutpasteitemcommand.h
 
 RESOURCES += \
-	resources.qrc
+        resources.qrc
 
 TRANSLATIONS += files/dictionary_ru.ts

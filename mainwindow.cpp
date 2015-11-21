@@ -372,10 +372,17 @@ void MainWindow::createDictionaryView()
 
 	/// Drag'n'Drop
 	treeView->setDragEnabled(true);
+<<<<<<< HEAD
 	treeView->setDropIndicatorShown(true);
 	treeView->setAcceptDrops(true);
 
 //	/// Sorting in model
+=======
+
+//	/// Sorting in model
+//	treeView->setDropIndicatorShown(true);
+//	treeView->setAcceptDrops(true);
+>>>>>>> c248a20ce3dc9ba7fb7ec4ec0283cbe25771b78b
 //	treeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
 //	treeView->setSortingEnabled(true);
 //	treeView->sortByColumn(DictionaryModel::EnglishColumn);
