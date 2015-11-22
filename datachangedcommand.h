@@ -22,8 +22,8 @@ private:
 	void changeData(const QVariant &value);
 
 	QVariant mNewValue;
-	QVariant mOldValue;
 	int mRole;
+	QVariant mOldValue;
 };
 
 #endif // DATACHANGEDCOMMAND_H

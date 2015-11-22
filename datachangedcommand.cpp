@@ -2,12 +2,15 @@
 #include "QAbstractItemView"
 #include "mainwindow.h"
 
+#include <QSortFilterProxyModel>
+
 DataChangedCommand::DataChangedCommand(QAbstractItemView *view, const QModelIndex &index) :
 	ItemCommand(view, index)
 {
-	mOldValue = pModel->modifiedData();
-	mRole = pModel->modifiedRole();
-	mNewValue = mIndex.data(mRole);
+	mIndex = proxyModel->mapToSource(index);
+	mOldValue = sourceModel->modifiedData();
+	mRole = sourceModel->modifiedRole();
+	mNewValue = mIndex.data(Qt::DisplayRole);
 }
 
 void DataChangedCommand::undo()
@@ -22,10 +25,10 @@ void DataChangedCommand::redo()
 
 void DataChangedCommand::changeData(const QVariant &value)
 {
-	pModel->startUndo();
+	sourceModel->startUndo();
 	reinitializeIndexes();
-	pModel->setData(mIndex, value, mRole);
-	pView->scrollTo(mIndex);
-	pModel->stopUndo();
+	sourceModel->setData(mIndex, value, mRole);
+	pView->scrollTo(proxyModel->mapFromSource(mIndex));
+	sourceModel->stopUndo();
 }
 

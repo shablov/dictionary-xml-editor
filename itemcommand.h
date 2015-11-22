@@ -7,6 +7,7 @@
 class QAbstractItemView;
 class DictionaryModel;
 class DictionaryItem;
+class QSortFilterProxyModel;
 
 class ItemCommand : public QUndoCommand
 {
@@ -18,7 +19,8 @@ protected:
 	virtual void reinitializeIndexes();
 
 	QAbstractItemView *pView;
-	DictionaryModel *pModel;
+	DictionaryModel *sourceModel;
+	QSortFilterProxyModel *proxyModel;
 	QModelIndex mIndex;
 	QModelIndex mParentIndex;
 	QModelIndex mGrandParentIndex;

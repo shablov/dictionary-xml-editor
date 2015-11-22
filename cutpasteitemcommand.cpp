@@ -1,6 +1,7 @@
 #include "cutpasteitemcommand.h"
 #include "dictionarymodel.h"
 #include <QAbstractItemView>
+#include <QSortFilterProxyModel>
 
 CutItemCommand::CutItemCommand(QAbstractItemView *view, const QModelIndex &index) :
 	ItemCommand(view, index), pCutItem(0)
@@ -20,13 +21,13 @@ void CutItemCommand::undo()
 	reinitializeIndexes();
 	if (mIndex.isValid())
 	{
-		mIndex = pModel->insertItem(new DictionaryItem(pCutItem), mIndex);
-		mIndex = pModel->upItem(mIndex.row(), mParentIndex);
-		pView->scrollTo(mIndex);
+		mIndex = sourceModel->insertItem(new DictionaryItem(pCutItem), mIndex);
+		mIndex = sourceModel->upItem(mIndex.row(), mParentIndex);
+		pView->scrollTo(proxyModel->mapFromSource(mIndex));
 	}
 	else
 	{
-		mIndex = pModel->insertItem(new DictionaryItem(pCutItem), mIndex);
+		mIndex = sourceModel->insertItem(new DictionaryItem(pCutItem), mIndex);
 		pView->scrollTo(mIndex);
 	}
 }
@@ -34,18 +35,21 @@ void CutItemCommand::undo()
 void CutItemCommand::redo()
 {
 	reinitializeIndexes();
-	pModel->cutItem(mIndex.row(), mParentIndex);
+	sourceModel->cutItem(mIndex.row(), mParentIndex);
 	if (!pCutItem)
 	{
-		pCutItem = new DictionaryItem(pModel->cuttedItem());
+		pCutItem = new DictionaryItem(sourceModel->cuttedItem());
 	}
 }
 
 
 PasteItemCommand::PasteItemCommand(QAbstractItemView *view, const QModelIndex &index) :
-	ItemCommand(view, index)
+	ItemCommand(view, index), pItem(0)
 {
-	pPasteItem = new DictionaryItem(pModel->cuttedItem());
+	if (sourceModel->cuttedItem())
+	{
+		pItem = new DictionaryItem(sourceModel->cuttedItem());
+	}
 }
 
 PasteItemCommand::~PasteItemCommand()
@@ -55,21 +59,21 @@ PasteItemCommand::~PasteItemCommand()
 void PasteItemCommand::undo()
 {
 	reinitializeIndexes();
-	insertedIndex = pModel->index(insertedIndex.row(), insertedIndex.column(), mParentIndex);
-	pModel->removeRow(insertedIndex.row(), mParentIndex);
+	insertedIndex = sourceModel->index(insertedIndex.row(), insertedIndex.column(), mParentIndex);
+	sourceModel->removeRow(insertedIndex.row(), mParentIndex);
 }
 
 void PasteItemCommand::redo()
 {
 	reinitializeIndexes();
-	insertedIndex = pModel->insertItem(new DictionaryItem(pPasteItem), mIndex);
+	insertedIndex = sourceModel->insertItem(new DictionaryItem(pItem), mIndex);
 	if (insertedIndex.parent() == mIndex)
 	{
 		mParentIndex = insertedIndex.parent();
 		mGrandParentIndex = mParentIndex.parent();
 		mRootParentIndex = mGrandParentIndex.parent();
 	}
-	pView->scrollTo(insertedIndex);
+	pView->scrollTo(proxyModel->mapFromSource(insertedIndex));
 }
 
 void PasteItemCommand::reinitializeIndexes()

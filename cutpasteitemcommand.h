@@ -27,8 +27,8 @@ public:
 	virtual void undo();
 	virtual void redo();
 
-private:
-	DictionaryItem *pPasteItem;
+protected:
+	DictionaryItem *pItem;
 
 	// ItemCommand interface
 protected:

@@ -6,11 +6,7 @@ HeaderView::HeaderView(Qt::Orientation orientation, bool wrap, QWidget *parent) 
 	QHeaderView(orientation, parent)
 {
 	wrapping = wrap;
-#if QT_VERSION >= 0x050000
 	setSectionsClickable(true);
-#else
-	setClickable(true);
-#endif
 	setStretchLastSection(true);
 }
 
@@ -80,11 +76,7 @@ void HeaderView::paintSection(QPainter *painter, const QRect &rect, int logicalI
 		}
 		QVariant foregroundBrush = model()->headerData(logicalIndex, orientation(),
 													   Qt::ForegroundRole);
-#if QT_VERSION >= 0x050000
 		if (foregroundBrush.canConvert(QMetaType::QBrush))
-#else
-		if (qVariantCanConvert<QBrush>(foregroundBrush))
-#endif
 		{
 			opt.palette.setBrush(QPalette::ButtonText, qvariant_cast<QBrush>(foregroundBrush));
 		}
@@ -92,11 +84,7 @@ void HeaderView::paintSection(QPainter *painter, const QRect &rect, int logicalI
 		QPointF oldBO = painter->brushOrigin();
 		QVariant backgroundBrush = model()->headerData(logicalIndex, orientation(),
 													   Qt::BackgroundRole);
-#if QT_VERSION >= 0x050000
 		if (backgroundBrush.canConvert(QMetaType::QBrush))
-#else
-		if (qVariantCanConvert<QBrush>(backgroundBrush))
-#endif
 		{
 			opt.palette.setBrush(QPalette::Button, qvariant_cast<QBrush>(backgroundBrush));
 			opt.palette.setBrush(QPalette::Window, qvariant_cast<QBrush>(backgroundBrush));

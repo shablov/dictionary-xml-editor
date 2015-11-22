@@ -70,9 +70,6 @@ private:
 	int mModifiedRole;
 	bool isUndoStop;
 
-protected:
-	void reset();
-
 	// QAbstractItemModel interface
 public:
 	virtual QModelIndex index(int row, int column, const QModelIndex &parent) const;

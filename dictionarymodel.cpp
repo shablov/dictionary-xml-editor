@@ -22,6 +22,7 @@ DictionaryModel::~DictionaryModel()
 
 bool DictionaryModel::load(const QString &fileName)
 {
+	beginResetModel();
 	QFile file(fileName);
 	if (!file.open(QIODevice::ReadOnly))
 	{
@@ -44,8 +45,8 @@ bool DictionaryModel::load(const QString &fileName)
 
 	QDomElement rootElement = doc.documentElement();
 	pRootItem = new DictionaryItem(rootElement);
-	reset();
 	emit modified(false);
+	endResetModel();
 	return true;
 }
 
@@ -75,9 +76,10 @@ bool DictionaryModel::save(const QString &fileName)
 
 void DictionaryModel::clear()
 {
+	beginResetModel();
 	delete pRootItem;
 	pRootItem = 0;
-	reset();
+	endResetModel();
 }
 
 void DictionaryModel::createNew()
@@ -295,16 +297,6 @@ QVariant DictionaryModel::modifiedData() const
 int DictionaryModel::modifiedRole() const
 {
 	return mModifiedRole;
-}
-
-void DictionaryModel::reset()
-{
-#if QT_VERSION >= 050000
-	beginResetModel();
-	endResetModel();
-#else
-	QAbstractItemModel::reset();
-#endif
 }
 
 QModelIndex DictionaryModel::index(int row, int column, const QModelIndex &parent) const

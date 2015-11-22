@@ -14,6 +14,7 @@
 #include <QCloseEvent>
 #include <QUndoStack>
 #include <QSettings>
+#include <QSortFilterProxyModel>
 
 #include "cutpasteitemcommand.h"
 #include "datachangedcommand.h"
@@ -308,18 +309,7 @@ void MainWindow::createSearchTool(QToolBar *toolBar)
 	searchLineEdit->setPlaceholderText(tr("Quick search(Ctrl+F)"));
 	searchLineEdit->setObjectName("searchLineEdit");
 	toolBar->addWidget(searchLineEdit);
-#if QT_VERSION >= 0x050300
 	searchLineEdit->addAction(actionSearch, QLineEdit::TrailingPosition);
-#else
-	searchLineEdit->setStyleSheet(QString("QLineEdit#searchLineEdit"
-										  "{"
-										  "border: 1px solid #000000;"
-										  "image: url(:/images/search);"
-										  "image-position: right;"
-										  "}"));
-
-	searchLineEdit->addAction(actionSearch);
-#endif
 	connect(actionSearch, SIGNAL(triggered()), searchLineEdit, SLOT(setFocus()));
 }
 
@@ -363,36 +353,21 @@ void MainWindow::createDictionaryView()
 	connect(pUndoStack, SIGNAL(cleanChanged(bool)), this, SLOT(onCleanChanged(bool)));
 	connect(pModel, SIGNAL(modifiedData(QModelIndex)), this, SLOT(onModifiedData(QModelIndex)));
 
+	QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(this);
+	proxyModel->setSourceModel(pModel);
+
 	ExTreeView *treeView = new ExTreeView(this);
 	treeView->installEventFilter(this);
-	treeView->setModel(pModel);
+	treeView->setModel(proxyModel);
+	treeView->setSortingEnabled(true);
 	treeView->setColumnPercentWidth(DictionaryModel::PixmapColumn, 30);
 	treeView->setColumnPercentWidth(DictionaryModel::EnglishColumn, 35);
 	treeView->setColumnPercentWidth(DictionaryModel::RussiaColumn, 35);
 
 	/// Drag'n'Drop
 	treeView->setDragEnabled(true);
-<<<<<<< HEAD
 	treeView->setDropIndicatorShown(true);
 	treeView->setAcceptDrops(true);
-
-//	/// Sorting in model
-=======
-
-//	/// Sorting in model
-//	treeView->setDropIndicatorShown(true);
-//	treeView->setAcceptDrops(true);
->>>>>>> c248a20ce3dc9ba7fb7ec4ec0283cbe25771b78b
-//	treeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
-//	treeView->setSortingEnabled(true);
-//	treeView->sortByColumn(DictionaryModel::EnglishColumn);
-//	treeView->header()->setSortIndicatorShown(true);
-//	treeView->header()->setSortIndicator(DictionaryModel::EnglishColumn, Qt::DescendingOrder);
-//#if QT_VERSION >= 0x050000
-//	treeView->header()->setSectionsClickable(true);
-//#else
-//	treeView->header()->setClickable(true);
-//#endif
 
 	connect(treeView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)), this, SLOT(leavePermittedActions()));
 	connect(pModel, SIGNAL(modified(bool)), this, SLOT(leavePermittedActions()));
@@ -596,10 +571,17 @@ void MainWindow::leavePermittedActions()
 {
 	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
 	QModelIndex index;
-	if (treeView)
+	if (!treeView)
 	{
-		index = treeView->currentIndex();
+		return;
 	}
+
+	QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel*>(treeView->model());
+	if (!proxyModel)
+	{
+		return;
+	}
+	index = proxyModel->mapToSource(treeView->currentIndex());
 	DictionaryItem::ItemType indexType = pModel->typeForIndex(index);
 
 	actionGroupAdd->actions()[DictionaryItem::ContextType]->setVisible(
@@ -675,9 +657,14 @@ void MainWindow::onCleanChanged(bool clean)
 void MainWindow::onModifiedData(const QModelIndex &index)
 {
 	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
-	if (treeView)
+	if (!treeView)
 	{
-		pUndoStack->push(new DataChangedCommand(treeView, index));
+		return;
+	}
+	QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel*>(treeView->model());
+	if (proxyModel)
+	{
+		pUndoStack->push(new DataChangedCommand(treeView, proxyModel->mapFromSource(index)));
 	}
 }
 

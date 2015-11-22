@@ -2,11 +2,12 @@
 #include "removeitemcommand.h"
 
 #include <QTreeView>
+#include <QSortFilterProxyModel>
 
 RemoveItemCommand::RemoveItemCommand(QAbstractItemView *view, const QModelIndex &index) :
 	ItemCommand(view, index), isExpanded(false)
 {
-	pItem = new DictionaryItem(pModel->itemForIndex(mIndex));
+	pItem = new DictionaryItem(sourceModel->itemForIndex(mIndex));
 }
 
 RemoveItemCommand::~RemoveItemCommand()
@@ -17,18 +18,23 @@ RemoveItemCommand::~RemoveItemCommand()
 void RemoveItemCommand::undo()
 {
 	reinitializeIndexes();
-	mIndex = pModel->insertItem(new DictionaryItem(pItem), mIndex);
-	mIndex = pModel->upItem(mIndex.row(), mParentIndex);
-	pView->scrollTo(mIndex);
+	bool lastItem = !mIndex.isValid();
+	mIndex = mIndex.isValid() ? mIndex : mParentIndex;
+	mIndex = sourceModel->insertItem(new DictionaryItem(pItem), mIndex);
+	if (!lastItem)
+	{
+		mIndex = sourceModel->upItem(mIndex.row(), mParentIndex);
+	}
+	pView->scrollTo(proxyModel->mapFromSource(mIndex));
 	if (isExpanded)
 	{
-		qobject_cast<QTreeView*>(pView)->expand(mIndex);
+		qobject_cast<QTreeView*>(pView)->expand(proxyModel->mapFromSource(mIndex));
 	}
 }
 
 void RemoveItemCommand::redo()
 {
 	reinitializeIndexes();
-	isExpanded = qobject_cast<QTreeView*>(pView)->isExpanded(mIndex);
-	pModel->removeRow(mIndex.row(), mParentIndex);
+	isExpanded = qobject_cast<QTreeView*>(pView)->isExpanded(proxyModel->mapFromSource(mIndex));
+	sourceModel->removeRow(mIndex.row(), mParentIndex);
 }

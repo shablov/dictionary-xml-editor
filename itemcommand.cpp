@@ -2,14 +2,20 @@
 #include "dictionarymodel.h"
 
 #include <QAbstractItemView>
+#include <QSortFilterProxyModel>
 
 ItemCommand::ItemCommand(QAbstractItemView *view, const QModelIndex &index) :
-	pView(view), mIndex(index)
+	pView(view)
 {
-	mParentIndex = mIndex.parent();
-	mGrandParentIndex = mParentIndex.parent();
-	mRootParentIndex = mGrandParentIndex.parent();
-	pModel = qobject_cast<DictionaryModel*>(view->model());
+	proxyModel = qobject_cast<QSortFilterProxyModel*>(view->model());
+	sourceModel = qobject_cast<DictionaryModel*>(proxyModel->sourceModel());
+	mIndex = proxyModel->mapToSource(index.sibling(index.row(), 0));
+	QModelIndex proxyParentIndex = index.parent();
+	mParentIndex = proxyModel->mapToSource(proxyParentIndex);
+	QModelIndex proxyGrandParentIndex = proxyParentIndex.parent();
+	mGrandParentIndex = proxyModel->mapToSource(proxyGrandParentIndex);
+	QModelIndex proxyRootParentIndex = proxyGrandParentIndex.parent();
+	mRootParentIndex = proxyModel->mapToSource(proxyRootParentIndex);
 }
 
 ItemCommand::~ItemCommand()
@@ -21,11 +27,11 @@ void ItemCommand::reinitializeIndexes()
 {
 	if (mGrandParentIndex.isValid())
 	{
-		mGrandParentIndex = pModel->index(mGrandParentIndex.row(), mGrandParentIndex.column(), mRootParentIndex);
+		mGrandParentIndex = sourceModel->index(mGrandParentIndex.row(), mGrandParentIndex.column(), mRootParentIndex);
 	}
 	if (mParentIndex.isValid())
 	{
-		mParentIndex = pModel->index(mParentIndex.row(), mParentIndex.column(), mGrandParentIndex);
+		mParentIndex = sourceModel->index(mParentIndex.row(), mParentIndex.column(), mGrandParentIndex);
 	}
-	mIndex = pModel->index(mIndex.row(), mIndex.column(), mParentIndex);
+	mIndex = sourceModel->index(mIndex.row(), mIndex.column(), mParentIndex);
 }

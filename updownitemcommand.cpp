@@ -2,6 +2,7 @@
 #include "dictionarymodel.h"
 
 #include <QAbstractItemView>
+#include <QSortFilterProxyModel>
 
 UpDownItemCommand::UpDownItemCommand(QAbstractItemView *view, const QModelIndex &index, MoveAction action) :
 	ItemCommand(view, index), successMove(true), action(action)
@@ -26,9 +27,9 @@ void UpDownItemCommand::moveItem(bool isRedo)
 		return;
 	}
 	reinitializeIndexes();
-	QModelIndex index = ((action == UpMove) ^ !isRedo) ? pModel->upItem(mIndex.row(), mParentIndex)
-													   : pModel->downItem(mIndex.row(), mParentIndex);
+	QModelIndex index = ((action == UpMove) ^ !isRedo) ? sourceModel->upItem(mIndex.row(), mParentIndex)
+													   : sourceModel->downItem(mIndex.row(), mParentIndex);
 	successMove = (index.row() != mIndex.row());
 	mIndex = index;
-	pView->scrollTo(mIndex);
+	pView->scrollTo(proxyModel->mapFromSource(mIndex));
 }

@@ -7,11 +7,7 @@ ExTreeView::ExTreeView(QWidget *parent) :
 	QTreeView(parent)
 {
 	setHeader(new HeaderView(Qt::Horizontal, true, this));
-#if QT_VERSION >= 0x050000
 	header()->setSectionResizeMode(QHeaderView::Fixed);
-#else
-	header()->setResizeMode(QHeaderView::Fixed);
-#endif
 
 	connect(this, SIGNAL(collapsed(QModelIndex)), SLOT(setCurrentIndex(QModelIndex)));
 	connect(this, SIGNAL(expanded(QModelIndex)), SLOT(setCurrentIndex(QModelIndex)));
