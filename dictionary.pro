@@ -15,6 +15,8 @@ MOC_DIR = obj
 OBJECTS_DIR = obj
 RCC_DIR = obj
 
+CONFIG += c++11
+
 SOURCES += main.cpp\
         mainwindow.cpp \
     dictionarymodel.cpp \
@@ -26,7 +28,8 @@ SOURCES += main.cpp\
     removeitemcommand.cpp \
     itemcommand.cpp \
     updownitemcommand.cpp \
-    cutpasteitemcommand.cpp
+    cutpasteitemcommand.cpp \
+    dictionarysortfilterproxymodel.cpp
 
 HEADERS  += mainwindow.h \
     dictionarymodel.h \
@@ -38,7 +41,8 @@ HEADERS  += mainwindow.h \
     removeitemcommand.h \
     itemcommand.h \
     updownitemcommand.h \
-    cutpasteitemcommand.h
+    cutpasteitemcommand.h \
+    dictionarysortfilterproxymodel.h
 
 RESOURCES += \
         resources.qrc

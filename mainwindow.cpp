@@ -14,10 +14,10 @@
 #include <QCloseEvent>
 #include <QUndoStack>
 #include <QSettings>
-#include <QSortFilterProxyModel>
 
 #include "cutpasteitemcommand.h"
 #include "datachangedcommand.h"
+#include "dictionarysortfilterproxymodel.h"
 #include "extreeview.h"
 #include "headerview.h"
 #include "insertitemcommand.h"
@@ -304,29 +304,39 @@ void MainWindow::createIndexesToolBar()
 
 void MainWindow::createSearchTool(QToolBar *toolBar)
 {
-	/// TODO: вынести stylesheet в отдельный файл
 	searchLineEdit = new QLineEdit(toolBar);
 	searchLineEdit->setPlaceholderText(tr("Quick search(Ctrl+F)"));
 	searchLineEdit->setObjectName("searchLineEdit");
 	toolBar->addWidget(searchLineEdit);
 	searchLineEdit->addAction(actionSearch, QLineEdit::TrailingPosition);
 	connect(actionSearch, SIGNAL(triggered()), searchLineEdit, SLOT(setFocus()));
+	connect(searchLineEdit, &QLineEdit::textChanged, this, [=] (const QString &text) {
+		proxyModel->setFilterText(text);
+	});
 }
 
 void MainWindow::createFilterTool(QToolBar *toolBar)
 {
 	QRadioButton *onlyStringsCheckBox = new QRadioButton(tr("Only strings"));
 	QRadioButton *onlyEnumsCheckBox = new QRadioButton(tr("Only enums"));
+	QRadioButton *allCheckBox = new QRadioButton(tr("All"));
 	QButtonGroup *checkBoxGroup = new QButtonGroup;
 	checkBoxGroup->setExclusive(true);
-	checkBoxGroup->addButton(onlyStringsCheckBox);
-	checkBoxGroup->addButton(onlyEnumsCheckBox);
-	connect(checkBoxGroup, SIGNAL(buttonClicked(int)), this, SLOT(onFilter()));
+	checkBoxGroup->addButton(onlyStringsCheckBox, DictionaryItem::StringType);
+	checkBoxGroup->addButton(onlyEnumsCheckBox, DictionaryItem::EnumType);
+	checkBoxGroup->addButton(allCheckBox, DictionaryItem::Invalid);
+	connect(checkBoxGroup, static_cast<void (QButtonGroup::*)(int, bool)>(&QButtonGroup::buttonToggled), this, [=] (int button, bool checked) {
+		if (checked)
+		{
+			proxyModel->setFilterType(static_cast<DictionaryItem::ItemType>(button));
+		}
+	});
 
 	QWidget *widget = new QWidget;
 	widget->setLayout(new QVBoxLayout);
 	widget->layout()->addWidget(onlyStringsCheckBox);
 	widget->layout()->addWidget(onlyEnumsCheckBox);
+	widget->layout()->addWidget(allCheckBox);
 
 	toolBar->addWidget(widget);
 }
@@ -347,14 +357,15 @@ void MainWindow::createContextMenu()
 
 void MainWindow::createDictionaryView()
 {
-	pModel = new DictionaryModel;
-	connect(pModel, SIGNAL(error(DictionaryModel::ModelError,QString)),
+	sourceModel = new DictionaryModel;
+	connect(sourceModel, SIGNAL(error(DictionaryModel::ModelError,QString)),
 			this, SLOT(onError(DictionaryModel::ModelError, QString)));
 	connect(pUndoStack, SIGNAL(cleanChanged(bool)), this, SLOT(onCleanChanged(bool)));
-	connect(pModel, SIGNAL(modifiedData(QModelIndex)), this, SLOT(onModifiedData(QModelIndex)));
+	connect(sourceModel, SIGNAL(modifiedData(QModelIndex)), this, SLOT(onModifiedData(QModelIndex)));
 
-	QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(this);
-	proxyModel->setSourceModel(pModel);
+	proxyModel = new DictionarySortFilterProxyModel(this);
+	proxyModel->setSourceModel(sourceModel);
+	proxyModel->setDynamicSortFilter(true);
 
 	ExTreeView *treeView = new ExTreeView(this);
 	treeView->installEventFilter(this);
@@ -370,7 +381,7 @@ void MainWindow::createDictionaryView()
 	treeView->setAcceptDrops(true);
 
 	connect(treeView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)), this, SLOT(leavePermittedActions()));
-	connect(pModel, SIGNAL(modified(bool)), this, SLOT(leavePermittedActions()));
+	connect(sourceModel, SIGNAL(modified(bool)), this, SLOT(leavePermittedActions()));
 
 	setCentralWidget(treeView);
 }
@@ -423,7 +434,7 @@ void MainWindow::setFileName(const QString &fileName)
 
 void MainWindow::loadFile(const QString &fileName)
 {
-	if ((!fileName.isEmpty()) && (pModel) && (pModel->load(fileName)))
+	if ((!fileName.isEmpty()) && (sourceModel) && (sourceModel->load(fileName)))
 	{
 		setFileName(fileName);
 		pUndoStack->clear();
@@ -457,9 +468,9 @@ void MainWindow::onNewFile()
 		return;
 	}
 
-	if (pModel)
+	if (sourceModel)
 	{
-		pModel->createNew();
+		sourceModel->createNew();
 		setFileName(QString());
 		pUndoStack->clear();
 	}
@@ -467,7 +478,7 @@ void MainWindow::onNewFile()
 
 bool MainWindow::saveToFile(const QString &fileName)
 {
-	if ((pModel) && (pModel->save(fileName)))
+	if ((sourceModel) && (sourceModel->save(fileName)))
 	{
 		setFileName(fileName);
 		pUndoStack->clear();
@@ -553,7 +564,7 @@ void MainWindow::onCopy()
 		QModelIndex currentIndex = treeView->currentIndex();
 		if (currentIndex.isValid())
 		{
-			pModel->copyItem(currentIndex.row(), currentIndex.parent());
+			sourceModel->copyItem(currentIndex.row(), currentIndex.parent());
 		}
 	}
 }
@@ -569,20 +580,13 @@ void MainWindow::onPaste()
 
 void MainWindow::leavePermittedActions()
 {
-	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
-	QModelIndex index;
+	QTreeView *treeView = qobject_cast<QTreeView*>(centralWidget());
 	if (!treeView)
 	{
 		return;
 	}
-
-	QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel*>(treeView->model());
-	if (!proxyModel)
-	{
-		return;
-	}
-	index = proxyModel->mapToSource(treeView->currentIndex());
-	DictionaryItem::ItemType indexType = pModel->typeForIndex(index);
+	QModelIndex index = proxyModel->mapToSource(treeView->currentIndex());
+	DictionaryItem::ItemType indexType = sourceModel->typeForIndex(index);
 
 	actionGroupAdd->actions()[DictionaryItem::ContextType]->setVisible(
 				isPossiblePlugIn(DictionaryItem::ContextType, indexType));
@@ -599,7 +603,7 @@ void MainWindow::leavePermittedActions()
 	actionRemove->setDisabled(indexType == DictionaryItem::Invalid);
 	actionCut->setDisabled(indexType == DictionaryItem::Invalid);
 	actionCopy->setDisabled(indexType == DictionaryItem::Invalid);
-	DictionaryItem::ItemType cutItemType = pModel->typeForCutItem();
+	DictionaryItem::ItemType cutItemType = sourceModel->typeForCutItem();
 	actionPaste->setEnabled(isPossiblePlugIn(cutItemType, indexType));
 
 	actionUp->setEnabled(index.row() > 0);
@@ -656,16 +660,12 @@ void MainWindow::onCleanChanged(bool clean)
 
 void MainWindow::onModifiedData(const QModelIndex &index)
 {
-	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
+	QTreeView *treeView = qobject_cast<QTreeView*>(centralWidget());
 	if (!treeView)
 	{
 		return;
 	}
-	QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel*>(treeView->model());
-	if (proxyModel)
-	{
-		pUndoStack->push(new DataChangedCommand(treeView, proxyModel->mapFromSource(index)));
-	}
+	pUndoStack->push(new DataChangedCommand(treeView, proxyModel->mapFromSource(index)));
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

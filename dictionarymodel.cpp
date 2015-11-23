@@ -389,6 +389,11 @@ QVariant DictionaryModel::data(const QModelIndex &index, int role) const
 			QPixmap pixmap = item->pixmap();
 			return pixmap.scaledToHeight(16, Qt::SmoothTransformation);
 		}
+
+		if ((role == Qt::UserRole) && (index.column() == PixmapColumn))
+		{
+			return item->type();
+		}
 	}
 	return QVariant();
 }

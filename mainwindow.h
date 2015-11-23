@@ -10,6 +10,8 @@ class QMenu;
 class QActionGroup;
 class QUndoStack;
 
+class DictionarySortFilterProxyModel;
+
 class MainWindow : public QMainWindow
 {
 	Q_OBJECT
@@ -103,7 +105,8 @@ private:
 
 	QString mFileName;
 
-	DictionaryModel *pModel;
+	DictionaryModel *sourceModel;
+	DictionarySortFilterProxyModel *proxyModel;
 
 	QUndoStack *pUndoStack;
 
