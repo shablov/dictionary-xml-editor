@@ -9,7 +9,7 @@ class QLineEdit;
 class QMenu;
 class QActionGroup;
 class QUndoStack;
-
+class ExTreeView;
 class DictionarySortFilterProxyModel;
 
 class MainWindow : public QMainWindow
@@ -57,26 +57,10 @@ private slots:
 	bool maybeSave();
 
 	void onOpenFile();
-	void onOpenRecentFile();
-	void onNewFile();
 	bool onSaveFile();
 	bool onSaveAs();
 
-	void onAdd(QAction *action);
-	void onRemove();
-	void onUp();
-	void onDown();
-	void onCut();
-	void onCopy();
-	void onPaste();
-
-	void onCustomContextMenuRequested(const QPoint &point);
 	void leavePermittedActions();
-
-	void onError(DictionaryModel::ModelError, const QString &description);
-
-	void onCleanChanged(bool clean);
-	void onModifiedData(const QModelIndex& index);
 
 private:
 	QAction *actionNewFile;
@@ -105,6 +89,7 @@ private:
 
 	QString mFileName;
 
+	ExTreeView *pTreeView;
 	DictionaryModel *sourceModel;
 	DictionarySortFilterProxyModel *proxyModel;
 

@@ -64,7 +64,12 @@ void MainWindow::createFileActions()
 	{
 		recentFilesActions[i] = new QAction(this);
 		recentFilesActions[i]->setVisible(false);
-		connect(recentFilesActions[i], SIGNAL(triggered()), this, SLOT(onOpenRecentFile()));
+		connect(recentFilesActions[i], &QAction::triggered, [=] () {
+			if (maybeSave())
+			{
+				loadFile(recentFilesActions[i]->data().toString());
+			}
+		});
 	}
 	updateRecentFileActions();
 
@@ -83,10 +88,24 @@ void MainWindow::createFileActions()
 	actionSaveFile->setToolTip(tr("Save file"));
 	actionSaveAs->setToolTip(tr("Save file as ..."));
 
-	connect(actionNewFile, SIGNAL(triggered()), this, SLOT(onNewFile()));
-	connect(actionOpenFile, SIGNAL(triggered()), this, SLOT(onOpenFile()));
-	connect(actionSaveFile, SIGNAL(triggered()), this, SLOT(onSaveFile()));
-	connect(actionSaveAs, SIGNAL(triggered()), this, SLOT(onSaveAs()));
+	connect(actionNewFile, &QAction::triggered, [=] () {
+		if (maybeSave())
+		{
+			sourceModel->createNew();
+			setFileName(QString());
+			pUndoStack->clear();
+		}
+	});
+	connect(actionOpenFile, &QAction::triggered, [=] () {
+		if (maybeSave())
+		{
+			QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
+															QDir::currentPath(), tr("Xml (*.xml)"));
+			loadFile(fileName);
+		}
+	});
+	connect(actionSaveFile, &QAction::triggered, this, &MainWindow::onSaveFile);
+	connect(actionSaveAs, &QAction::triggered, this, &MainWindow::onSaveAs);
 }
 
 void MainWindow::createItemsActions()
@@ -106,8 +125,16 @@ void MainWindow::createItemsActions()
 	actionRemove->setIconVisibleInMenu(true);
 	actionRemove->setShortcut(QKeySequence::Delete);
 
-	connect(actionRemove, SIGNAL(triggered()), this, SLOT(onRemove()));
-	connect(actionGroupAdd, SIGNAL(triggered(QAction*)), this, SLOT(onAdd(QAction*)));
+	connect(actionRemove, &QAction::triggered, this, [=] () {
+		if (pTreeView->currentIndex().isValid())
+		{
+			pUndoStack->push(new RemoveItemCommand(pTreeView, pTreeView->currentIndex()));
+		}
+	});
+	connect(actionGroupAdd, &QActionGroup::triggered, this, [=] (QAction *action) {
+		DictionaryItem::ItemType type = static_cast<DictionaryItem::ItemType>(action->data().toUInt());
+		pUndoStack->push(new InsertItemCommand(pTreeView, pTreeView->currentIndex(), type));
+	});
 }
 
 void MainWindow::createMoveActions()
@@ -121,8 +148,18 @@ void MainWindow::createMoveActions()
 	actionUp->setToolTip(tr("Move item up"));
 	actionDown->setToolTip(tr("Move item down"));
 
-	connect(actionUp, SIGNAL(triggered()), this, SLOT(onUp()));
-	connect(actionDown, SIGNAL(triggered()), this, SLOT(onDown()));
+	connect(actionUp, &QAction::triggered, this, [=] () {
+		if (pTreeView->currentIndex().isValid())
+		{
+			pUndoStack->push(new UpDownItemCommand(pTreeView, pTreeView->currentIndex(), UpDownItemCommand::UpMove));
+		}
+	});
+	connect(actionDown, &QAction::triggered, this, [=] () {
+		if (pTreeView->currentIndex().isValid())
+		{
+			pUndoStack->push(new UpDownItemCommand(pTreeView, pTreeView->currentIndex(), UpDownItemCommand::DownMove));
+		}
+	});
 }
 
 void MainWindow::createEditActions()
@@ -147,9 +184,25 @@ void MainWindow::createEditActions()
 	actionUndo->setIconVisibleInMenu(true);
 	actionRedo->setIconVisibleInMenu(true);
 
-	connect(actionCut, SIGNAL(triggered()), this, SLOT(onCut()));
-	connect(actionCopy, SIGNAL(triggered()), this, SLOT(onCopy()));
-	connect(actionPaste, SIGNAL(triggered()), this, SLOT(onPaste()));
+	connect(actionCut, &QAction::triggered, this, [=] () {
+		if (pTreeView->currentIndex().isValid())
+		{
+			pUndoStack->push(new CutItemCommand(pTreeView, pTreeView->currentIndex()));
+		}
+	});
+	connect(actionCopy, &QAction::triggered, this, [=] () {
+		QModelIndex currentIndex = pTreeView->currentIndex();
+		if (currentIndex.isValid())
+		{
+			sourceModel->copyItem(currentIndex.row(), currentIndex.parent());
+		}
+	});
+	connect(actionPaste, &QAction::triggered, this, [=] () {
+		if (pTreeView->currentIndex().isValid())
+		{
+			pUndoStack->push(new PasteItemCommand(pTreeView, pTreeView->currentIndex()));
+		}
+	});
 
 	actionCut->setDisabled(true);
 	actionCopy->setDisabled(true);
@@ -185,7 +238,7 @@ void MainWindow::createFileMenu()
 	fileMenu->addSeparator();
 	QAction *actionExit = fileMenu->addAction(QIcon(":images/exit"), tr("Exit"));
 	actionExit->setIconVisibleInMenu(true);
-	connect(actionExit, SIGNAL(triggered()), this, SLOT(close()));
+	connect(actionExit, &QAction::triggered, this, &MainWindow::close);
 }
 
 void MainWindow::updateRecentFileActions()
@@ -309,7 +362,8 @@ void MainWindow::createSearchTool(QToolBar *toolBar)
 	searchLineEdit->setObjectName("searchLineEdit");
 	toolBar->addWidget(searchLineEdit);
 	searchLineEdit->addAction(actionSearch, QLineEdit::TrailingPosition);
-	connect(actionSearch, SIGNAL(triggered()), searchLineEdit, SLOT(setFocus()));
+	connect(actionSearch, &QAction::triggered,
+			searchLineEdit, static_cast<void (QLineEdit::*)()>(&QLineEdit::setFocus));
 	connect(searchLineEdit, &QLineEdit::textChanged, this, [=] (const QString &text) {
 		proxyModel->setFilterText(text);
 	});
@@ -351,39 +405,47 @@ void MainWindow::createContextMenu()
 	contextMenu->addAction(actionPaste);
 
 	setContextMenuPolicy(Qt::CustomContextMenu);
-	connect(this, SIGNAL(customContextMenuRequested(QPoint)),
-			SLOT(onCustomContextMenuRequested(QPoint)));
+	connect(this, &MainWindow::customContextMenuRequested, [=] (const QPoint &point) {
+		QPoint globalPoint = mapToGlobal(point);
+		contextMenu->exec(globalPoint);
+	});
 }
 
 void MainWindow::createDictionaryView()
 {
 	sourceModel = new DictionaryModel;
-	connect(sourceModel, SIGNAL(error(DictionaryModel::ModelError,QString)),
-			this, SLOT(onError(DictionaryModel::ModelError, QString)));
-	connect(pUndoStack, SIGNAL(cleanChanged(bool)), this, SLOT(onCleanChanged(bool)));
-	connect(sourceModel, SIGNAL(modifiedData(QModelIndex)), this, SLOT(onModifiedData(QModelIndex)));
+	connect(sourceModel, &DictionaryModel::error, this, [=] (DictionaryModel::ModelError, const QString &description) {
+		QErrorMessage::qtHandler()->showMessage(description);
+	});
+	connect(pUndoStack, &QUndoStack::cleanChanged, this, [=] (bool clean) {
+		setWindowModified(!clean);
+	});
+	connect(sourceModel, static_cast<void (DictionaryModel::*)(const QModelIndex &)>(&DictionaryModel::modifiedData),
+			this, [=] (const QModelIndex &index) {
+		pUndoStack->push(new DataChangedCommand(pTreeView, proxyModel->mapFromSource(index)));
+	});
 
 	proxyModel = new DictionarySortFilterProxyModel(this);
 	proxyModel->setSourceModel(sourceModel);
 	proxyModel->setDynamicSortFilter(true);
 
-	ExTreeView *treeView = new ExTreeView(this);
-	treeView->installEventFilter(this);
-	treeView->setModel(proxyModel);
-	treeView->setSortingEnabled(true);
-	treeView->setColumnPercentWidth(DictionaryModel::PixmapColumn, 30);
-	treeView->setColumnPercentWidth(DictionaryModel::EnglishColumn, 35);
-	treeView->setColumnPercentWidth(DictionaryModel::RussiaColumn, 35);
+	pTreeView = new ExTreeView(this);
+	pTreeView->installEventFilter(this);
+	pTreeView->setModel(proxyModel);
+	pTreeView->setSortingEnabled(true);
+	pTreeView->setColumnPercentWidth(DictionaryModel::PixmapColumn, 30);
+	pTreeView->setColumnPercentWidth(DictionaryModel::EnglishColumn, 35);
+	pTreeView->setColumnPercentWidth(DictionaryModel::RussiaColumn, 35);
 
 	/// Drag'n'Drop
-	treeView->setDragEnabled(true);
-	treeView->setDropIndicatorShown(true);
-	treeView->setAcceptDrops(true);
+	pTreeView->setDragEnabled(true);
+	pTreeView->setDropIndicatorShown(true);
+	pTreeView->setAcceptDrops(true);
 
-	connect(treeView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)), this, SLOT(leavePermittedActions()));
+	connect(pTreeView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)), this, SLOT(leavePermittedActions()));
 	connect(sourceModel, SIGNAL(modified(bool)), this, SLOT(leavePermittedActions()));
 
-	setCentralWidget(treeView);
+	setCentralWidget(pTreeView);
 }
 
 bool MainWindow::maybeSave()
@@ -452,28 +514,16 @@ void MainWindow::onOpenFile()
 	loadFile(fileName);
 }
 
-void MainWindow::onOpenRecentFile()
+bool MainWindow::onSaveFile()
 {
-	QAction *action = qobject_cast<QAction*>(sender());
-	if (action && maybeSave())
-	{
-		loadFile(action->data().toString());
-	}
+	return mFileName.isEmpty() ? onSaveAs() : saveToFile(mFileName);
 }
 
-void MainWindow::onNewFile()
+bool MainWindow::onSaveAs()
 {
-	if (!maybeSave())
-	{
-		return;
-	}
-
-	if (sourceModel)
-	{
-		sourceModel->createNew();
-		setFileName(QString());
-		pUndoStack->clear();
-	}
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
+													QDir::currentPath(), tr("Xml (*.xml)"));
+	return !fileName.isEmpty() ? saveToFile(fileName) : true;
 }
 
 bool MainWindow::saveToFile(const QString &fileName)
@@ -487,105 +537,9 @@ bool MainWindow::saveToFile(const QString &fileName)
 	return false;
 }
 
-bool MainWindow::onSaveFile()
-{
-	if (mFileName.isEmpty())
-	{
-		return onSaveAs();
-	}
-	else
-	{
-		return saveToFile(mFileName);
-	}
-}
-
-bool MainWindow::onSaveAs()
-{
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
-													QDir::currentPath(), tr("Xml (*.xml)"));
-	if (fileName.isEmpty())
-	{
-		return true;
-	}
-	return saveToFile(fileName);
-}
-
-void MainWindow::onAdd(QAction *action)
-{
-	DictionaryItem::ItemType type = static_cast<DictionaryItem::ItemType>(action->data().toUInt());
-	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
-	if (treeView)
-	{
-		pUndoStack->push(new InsertItemCommand(treeView, treeView->currentIndex(), type));
-	}
-}
-
-void MainWindow::onRemove()
-{
-	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
-	if (treeView && treeView->currentIndex().isValid())
-	{
-		pUndoStack->push(new RemoveItemCommand(treeView, treeView->currentIndex()));
-	}
-}
-
-void MainWindow::onUp()
-{
-	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
-	if (treeView && treeView->currentIndex().isValid())
-	{
-		pUndoStack->push(new UpDownItemCommand(treeView, treeView->currentIndex(), UpDownItemCommand::UpMove));
-	}
-}
-
-void MainWindow::onDown()
-{
-	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
-	if (treeView && treeView->currentIndex().isValid())
-	{
-		pUndoStack->push(new UpDownItemCommand(treeView, treeView->currentIndex(), UpDownItemCommand::DownMove));
-	}
-}
-
-void MainWindow::onCut()
-{
-	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
-	if (treeView && treeView->currentIndex().isValid())
-	{
-		pUndoStack->push(new CutItemCommand(treeView, treeView->currentIndex()));
-	}
-}
-
-void MainWindow::onCopy()
-{
-	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
-	if (treeView)
-	{
-		QModelIndex currentIndex = treeView->currentIndex();
-		if (currentIndex.isValid())
-		{
-			sourceModel->copyItem(currentIndex.row(), currentIndex.parent());
-		}
-	}
-}
-
-void MainWindow::onPaste()
-{
-	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
-	if (treeView && treeView->currentIndex().isValid())
-	{
-		pUndoStack->push(new PasteItemCommand(treeView, treeView->currentIndex()));
-	}
-}
-
 void MainWindow::leavePermittedActions()
 {
-	QTreeView *treeView = qobject_cast<QTreeView*>(centralWidget());
-	if (!treeView)
-	{
-		return;
-	}
-	QModelIndex index = proxyModel->mapToSource(treeView->currentIndex());
+	QModelIndex index = proxyModel->mapToSource(pTreeView->currentIndex());
 	DictionaryItem::ItemType indexType = sourceModel->typeForIndex(index);
 
 	actionGroupAdd->actions()[DictionaryItem::ContextType]->setVisible(
@@ -630,42 +584,6 @@ bool MainWindow::isPossiblePlugIn(DictionaryItem::ItemType plugInType, Dictionar
 				indexType == DictionaryItem::ArgType);
 	}
 	return false;
-}
-
-void MainWindow::onCustomContextMenuRequested(const QPoint &point)
-{
-	if (!contextMenu)
-	{
-		return;
-	}
-
-	ExTreeView *treeView = qobject_cast<ExTreeView*>(centralWidget());
-	if (treeView)
-	{
-		QPoint globalPoint = mapToGlobal(point);
-		contextMenu->exec(globalPoint);
-	}
-}
-
-void MainWindow::onError(DictionaryModel::ModelError, const QString &description)
-{
-	QErrorMessage *message = QErrorMessage::qtHandler();
-	message->showMessage(description);
-}
-
-void MainWindow::onCleanChanged(bool clean)
-{
-	setWindowModified(!clean);
-}
-
-void MainWindow::onModifiedData(const QModelIndex &index)
-{
-	QTreeView *treeView = qobject_cast<QTreeView*>(centralWidget());
-	if (!treeView)
-	{
-		return;
-	}
-	pUndoStack->push(new DataChangedCommand(treeView, proxyModel->mapFromSource(index)));
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
