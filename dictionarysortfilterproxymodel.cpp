@@ -57,10 +57,17 @@ bool DictionarySortFilterProxyModel::filterAcceptsRow(int source_row, const QMod
 	{
 		return true;
 	}
+	QModelIndex index = child.sibling(child.row(), DictionaryModel::RussiaColumn);
+	QString text = index.data(Qt::DisplayRole).toString();
+	bool containsRussianText = text.contains(mFilterText, Qt::CaseInsensitive);
+	if (containsRussianText)
+	{
+		return true;
+	}
 	switch (type)
 	{
-		case DictionaryItem::ContextType:
 		case DictionaryItem::EnumType:
+		case DictionaryItem::ContextType:
 		{
 			for (int i = 0; i < sourceModel()->rowCount(child); ++i)
 			{
@@ -69,18 +76,11 @@ bool DictionarySortFilterProxyModel::filterAcceptsRow(int source_row, const QMod
 					return true;
 				}
 			}
-			return false;
 		}
 		case DictionaryItem::StringType:
-		case DictionaryItem::ArgType:
-		{
-			QModelIndex index = child.sibling(child.row(), DictionaryModel::RussiaColumn);
-			QString text = index.data(Qt::DisplayRole).toString();
-			return text.contains(mFilterText, Qt::CaseInsensitive);
-		}
+		case DictionaryItem::ArgType: return false;
 		case DictionaryItem::Invalid:
-		default:
-			return true;
+		default: return true;
 	}
 }
 
