@@ -8,7 +8,9 @@ ItemCommand::ItemCommand(QAbstractItemView *view, const QModelIndex &index) :
 	pView(view)
 {
 	proxyModel = qobject_cast<QSortFilterProxyModel*>(view->model());
+	Q_ASSERT(proxyModel);
 	sourceModel = qobject_cast<DictionaryModel*>(proxyModel->sourceModel());
+	Q_ASSERT(sourceModel);
 	mIndex = proxyModel->mapToSource(index.sibling(index.row(), 0));
 	QModelIndex proxyParentIndex = index.parent();
 	mParentIndex = proxyModel->mapToSource(proxyParentIndex);

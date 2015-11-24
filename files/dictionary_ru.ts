@@ -189,6 +189,11 @@
         <translation>Только перечисления</translation>
     </message>
     <message>
+	<location filename="mainwindow.cpp" line="330"/>
+	<source>All</source>
+	<translation>Все</translation>
+    </message>
+    <message>
         <location filename="mainwindow.cpp" line="395"/>
         <source>Dictionary is modified</source>
         <translation>Словарь изменен</translation>

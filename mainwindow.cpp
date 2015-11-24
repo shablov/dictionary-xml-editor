@@ -379,6 +379,7 @@ void MainWindow::createFilterTool(QToolBar *toolBar)
 	checkBoxGroup->addButton(onlyStringsCheckBox, DictionaryItem::StringType);
 	checkBoxGroup->addButton(onlyEnumsCheckBox, DictionaryItem::EnumType);
 	checkBoxGroup->addButton(allCheckBox, DictionaryItem::Invalid);
+	allCheckBox->setChecked(true);
 	connect(checkBoxGroup, static_cast<void (QButtonGroup::*)(int, bool)>(&QButtonGroup::buttonToggled), this, [=] (int button, bool checked) {
 		if (checked)
 		{

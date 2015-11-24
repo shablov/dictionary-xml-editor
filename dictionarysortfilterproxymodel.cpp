@@ -22,10 +22,9 @@ void DictionarySortFilterProxyModel::setFilterText(QString filterText)
 	if (mFilterText == filterText)
 		return;
 
-	beginResetModel();
 	mFilterText = filterText;
+	invalidateFilter();
 	emit filterTextChanged(filterText);
-	endResetModel();
 }
 
 void DictionarySortFilterProxyModel::setFilterType(DictionaryItem::ItemType filterType)
@@ -33,10 +32,9 @@ void DictionarySortFilterProxyModel::setFilterType(DictionaryItem::ItemType filt
 	if (mFilterType == filterType)
 		return;
 
-	beginResetModel();
 	mFilterType = filterType;
 	emit filterTypeChanged(filterType);
-	endResetModel();
+	invalidateFilter();
 }
 
 bool DictionarySortFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
