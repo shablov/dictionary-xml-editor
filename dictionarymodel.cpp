@@ -267,6 +267,7 @@ QModelIndex DictionaryModel::insertItem(DictionaryItem *itemForInsert, const QMo
 		{
 			parentItem = (item->type() == DictionaryItem::EnumType) ? (item) : (item->parent());
 			parentIndex = (item->type() == DictionaryItem::EnumType) ? (index) : (parent(index));
+			itemForInsert->setEnumValue(parentItem->childCount());
 			break;
 		}
 		default:
