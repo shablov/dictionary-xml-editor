@@ -1,10 +1,11 @@
 #include "extreeview.h"
 #include "headerview.h"
 
+#include <QDebug>
 #include <QKeyEvent>
 
 ExTreeView::ExTreeView(QWidget *parent) :
-	QTreeView(parent)
+	QTreeView(parent), mBeginColumnToTabOrder(0), mEndColumnToTabOrder(0)
 {
 	setHeader(new HeaderView(Qt::Horizontal, true, this));
 	header()->setSectionResizeMode(QHeaderView::Fixed);
@@ -37,6 +38,18 @@ void ExTreeView::normalizeColumnsWidth()
 	{
 		mColumnsPercentWidth[col] = percent;
 	}
+	resizeColumnsToPercentWidth();
+}
+
+void ExTreeView::resizeColumnsToPercentWidth()
+{
+	double widthPercent = viewport()->width() / 100.0;
+	QMapIterator<int, int> i(mColumnsPercentWidth);
+	while (i.hasNext())
+	{
+		i.next();
+		setColumnWidth(i.key(), widthPercent * i.value());
+	}
 }
 
 void ExTreeView::setColumnPercentWidth(int col, int percent)
@@ -45,22 +58,38 @@ void ExTreeView::setColumnPercentWidth(int col, int percent)
 	{
 		return;
 	}
-
 	mColumnsPercentWidth[col] = percent;
+	resizeColumnsToPercentWidth();
+}
+
+int ExTreeView::beginColumnToTabOrder() const
+{
+	return mBeginColumnToTabOrder;
+}
+
+int ExTreeView::endColumnToTabOrder() const
+{
+	return mEndColumnToTabOrder;
+}
+
+void ExTreeView::setBeginColumnToTabOrder(int beginColumnToTabOrder)
+{
+	mBeginColumnToTabOrder = (beginColumnToTabOrder >= model()->rowCount() || beginColumnToTabOrder < 0)
+			? 0
+			: beginColumnToTabOrder;
+}
+
+void ExTreeView::setEndColumnToTabOrder(int endColumnToTabOrder)
+{
+	mEndColumnToTabOrder = (endColumnToTabOrder >= model()->rowCount() || endColumnToTabOrder < 0)
+			? model()->rowCount() - 1
+			: endColumnToTabOrder;
 }
 
 void ExTreeView::resizeEvent(QResizeEvent *event)
 {
 	QTreeView::resizeEvent(event);
-
-	double widthPercent = viewport()->width() / 100.0;
-
-	QMapIterator<int, int> i(mColumnsPercentWidth);
-	while (i.hasNext())
-	{
-		i.next();
-		setColumnWidth(i.key(), widthPercent * i.value());
-	}
+	resizeColumnsToPercentWidth();
 }
 
 
@@ -76,4 +105,39 @@ void ExTreeView::keyReleaseEvent(QKeyEvent *keyEvent)
 			emit pressed(index);
 		}
 	}
+}
+
+QModelIndex ExTreeView::moveCursor(QAbstractItemView::CursorAction cursorAction, Qt::KeyboardModifiers modifiers)
+{
+	if (cursorAction == QAbstractItemView::MoveNext ||
+		cursorAction == QAbstractItemView::MovePrevious)
+	{
+		int step = (cursorAction == QAbstractItemView::MoveNext ? 1 : -1);
+		int columnForRowStep = (cursorAction == QAbstractItemView::MoveNext ? mBeginColumnToTabOrder
+																			: mEndColumnToTabOrder);
+		columnForRowStep = (columnForRowStep >= model()->rowCount() ? model()->rowCount()
+																	 : columnForRowStep);
+		QModelIndex index = currentIndex();
+		if (index.isValid())
+		{
+			QModelIndex stepColumnIndex = index.sibling(index.row(), index.column() + step);
+			if (stepColumnIndex.isValid() && stepColumnIndex.column() >= beginColumnToTabOrder())
+			{
+				return stepColumnIndex;
+			}
+			QModelIndex stepRowIndex = index.sibling(index.row() + step, columnForRowStep);
+			if (stepRowIndex.isValid())
+			{
+				return stepRowIndex;
+			}
+		}
+	}
+	return QTreeView::moveCursor(cursorAction, modifiers);
+}
+
+
+void ExTreeView::setModel(QAbstractItemModel *model)
+{
+	QTreeView::setModel(model);
+	setEndColumnToTabOrder(model->columnCount() - 1);
 }

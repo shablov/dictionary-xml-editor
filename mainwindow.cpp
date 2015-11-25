@@ -437,6 +437,7 @@ void MainWindow::createDictionaryView()
 	pTreeView->setColumnPercentWidth(DictionaryModel::PixmapColumn, 30);
 	pTreeView->setColumnPercentWidth(DictionaryModel::EnglishColumn, 35);
 	pTreeView->setColumnPercentWidth(DictionaryModel::RussiaColumn, 35);
+	pTreeView->setBeginColumnToTabOrder(1);
 
 	/// Drag'n'Drop
 	pTreeView->setDragEnabled(true);
