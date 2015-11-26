@@ -24,7 +24,6 @@ void DictionarySortFilterProxyModel::setFilterText(QString filterText)
 
 	mFilterText = filterText;
 	invalidateFilter();
-	emit filterTextChanged(filterText);
 }
 
 void DictionarySortFilterProxyModel::setFilterType(DictionaryItem::ItemType filterType)
@@ -33,7 +32,6 @@ void DictionarySortFilterProxyModel::setFilterType(DictionaryItem::ItemType filt
 		return;
 
 	mFilterType = filterType;
-	emit filterTypeChanged(filterType);
 	invalidateFilter();
 }
 
@@ -84,7 +82,9 @@ bool DictionarySortFilterProxyModel::filterAcceptsRow(int source_row, const QMod
 
 bool DictionarySortFilterProxyModel::lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const
 {
-	if (source_left.column() == source_right.column() && source_left.column() == DictionaryModel::PixmapColumn)
+	if ((source_right.column() == DictionaryModel::PixmapColumn) &&
+		(source_left.column() == DictionaryModel::PixmapColumn) &&
+		!source_left.data(Qt::DisplayRole).isValid())
 	{
 		return source_left.data(Qt::UserRole).toInt() > source_right.data(Qt::UserRole).toInt();
 	}

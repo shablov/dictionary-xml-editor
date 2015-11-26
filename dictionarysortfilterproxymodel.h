@@ -8,8 +8,8 @@
 class DictionarySortFilterProxyModel : public QSortFilterProxyModel
 {
 	Q_OBJECT
-	Q_PROPERTY(QString filterText READ filterText WRITE setFilterText NOTIFY filterTextChanged)
-	Q_PROPERTY(DictionaryItem::ItemType filterType READ filterType WRITE setFilterType NOTIFY filterTypeChanged)
+	Q_PROPERTY(QString filterText READ filterText WRITE setFilterText)
+	Q_PROPERTY(DictionaryItem::ItemType filterType READ filterType WRITE setFilterType)
 public:
 	DictionarySortFilterProxyModel(QObject *parent = 0);
 	QString filterText() const;
@@ -18,10 +18,6 @@ public:
 public slots:
 	void setFilterText(QString filterText);
 	void setFilterType(DictionaryItem::ItemType filterType);
-
-signals:
-	void filterTextChanged(QString filterText);
-	void filterTypeChanged(DictionaryItem::ItemType filterType);
 
 private:
 	QString mFilterText;
