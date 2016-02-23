@@ -438,6 +438,10 @@ void MainWindow::createDictionaryView()
 	pTreeView->setColumnPercentWidth(DictionaryModel::EnglishColumn, 35);
 	pTreeView->setColumnPercentWidth(DictionaryModel::RussiaColumn, 35);
 	pTreeView->setBeginColumnToTabOrder(1);
+	connect(pTreeView->header(), &QHeaderView::sectionClicked, this, [=] {
+		pTreeView->scrollTo(pTreeView->currentIndex());
+	});
+
 
 	/// Drag'n'Drop
 	pTreeView->setDragEnabled(true);
@@ -530,6 +534,7 @@ bool MainWindow::onSaveAs()
 
 bool MainWindow::saveToFile(const QString &fileName)
 {
+	pTreeView->setFocus();
 	if ((sourceModel) && (sourceModel->save(fileName)))
 	{
 		setFileName(fileName);

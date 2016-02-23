@@ -74,14 +74,14 @@ int ExTreeView::endColumnToTabOrder() const
 
 void ExTreeView::setBeginColumnToTabOrder(int beginColumnToTabOrder)
 {
-	mBeginColumnToTabOrder = (beginColumnToTabOrder >= model()->rowCount() || beginColumnToTabOrder < 0)
+	mBeginColumnToTabOrder = (beginColumnToTabOrder >= model()->columnCount() || beginColumnToTabOrder < 0)
 			? 0
 			: beginColumnToTabOrder;
 }
 
 void ExTreeView::setEndColumnToTabOrder(int endColumnToTabOrder)
 {
-	mEndColumnToTabOrder = (endColumnToTabOrder >= model()->rowCount() || endColumnToTabOrder < 0)
+	mEndColumnToTabOrder = (endColumnToTabOrder >= model()->columnCount() || endColumnToTabOrder < 0)
 			? model()->rowCount() - 1
 			: endColumnToTabOrder;
 }
@@ -115,8 +115,6 @@ QModelIndex ExTreeView::moveCursor(QAbstractItemView::CursorAction cursorAction,
 		int step = (cursorAction == QAbstractItemView::MoveNext ? 1 : -1);
 		int columnForRowStep = (cursorAction == QAbstractItemView::MoveNext ? mBeginColumnToTabOrder
 																			: mEndColumnToTabOrder);
-		columnForRowStep = (columnForRowStep >= model()->rowCount() ? model()->rowCount()
-																	 : columnForRowStep);
 		QModelIndex index = currentIndex();
 		if (index.isValid())
 		{

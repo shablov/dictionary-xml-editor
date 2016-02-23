@@ -53,10 +53,14 @@ bool DictionarySortFilterProxyModel::filterAcceptsRow(int source_row, const QMod
 	{
 		return true;
 	}
-	QModelIndex index = child.sibling(child.row(), DictionaryModel::RussiaColumn);
-	QString text = index.data(Qt::DisplayRole).toString();
-	bool containsRussianText = text.contains(mFilterText, Qt::CaseInsensitive);
-	if (containsRussianText)
+	QModelIndex russianTextIndex = child.sibling(child.row(), DictionaryModel::RussiaColumn);
+	QString russianText = russianTextIndex.data(Qt::DisplayRole).toString();
+	bool containsRussianText = russianText.contains(mFilterText, Qt::CaseInsensitive);
+
+	QModelIndex englishTextIndex = child.sibling(child.row(), DictionaryModel::EnglishColumn);
+	QString englishText = englishTextIndex.data(Qt::DisplayRole).toString();
+	bool containsEnglishText = englishText.contains(mFilterText, Qt::CaseInsensitive);
+	if (containsRussianText || containsEnglishText)
 	{
 		return true;
 	}
