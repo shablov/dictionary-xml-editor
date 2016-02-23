@@ -1,7 +1,6 @@
 #include "extreeview.h"
 #include "headerview.h"
 
-#include <QDebug>
 #include <QKeyEvent>
 
 ExTreeView::ExTreeView(QWidget *parent) :

@@ -441,6 +441,7 @@ void MainWindow::createDictionaryView()
 	connect(pTreeView->header(), &QHeaderView::sectionClicked, this, [=] {
 		pTreeView->scrollTo(pTreeView->currentIndex());
 	});
+	pTreeView->setItemDelegateForColumn(DictionaryModel::RussiaColumn, new LineDelegate);
 
 
 	/// Drag'n'Drop

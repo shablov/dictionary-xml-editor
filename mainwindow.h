@@ -1,7 +1,13 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QDebug>
+#include <QLineEdit>
 #include <QMainWindow>
+#include <QStyledItemDelegate>
+#include <QEvent>
+#include <QFocusEvent>
+#include <QKeyEvent>
 
 #include "dictionarymodel.h"
 
@@ -97,6 +103,70 @@ private:
 	// QWidget interface
 protected:
 	virtual void closeEvent(QCloseEvent *event);
+};
+
+class LineDelegate : public QStyledItemDelegate
+{
+
+
+	// QAbstractItemDelegate interface
+public:
+	virtual QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
+	{
+		return new QLineEdit(parent);
+	}
+	virtual void setEditorData(QWidget *editor, const QModelIndex &index) const
+	{
+		editor->setProperty("text", index.data(Qt::EditRole));
+	}
+	virtual void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
+	{
+		qDebug() << Q_FUNC_INFO;
+		model->setData(index, editor->property("text"));
+	}
+
+	// QAbstractItemDelegate interface
+public:
+	virtual bool editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index)
+	{
+		qDebug() << event;
+		if (QFocusEvent *focusEvent = dynamic_cast<QFocusEvent*>(event))
+		{
+			if (focusEvent->reason() == Qt::ActiveWindowFocusReason)
+			{
+				focusEvent->ignore();
+				return false;
+			}
+		}
+		return QStyledItemDelegate::editorEvent(event, model, option, index);
+	}
+
+	// QObject interface
+public:
+	virtual bool eventFilter(QObject *object, QEvent *event)
+	{
+		static bool isSwitch = false;
+		qDebug() << event;
+		if (QInputMethodQueryEvent *keyEvent = dynamic_cast<QInputMethodQueryEvent*>(event))
+		{
+			if (keyEvent->queries() == 0x101)
+			{
+				isSwitch = true;
+				qDebug() << 1 << isSwitch << keyEvent->value(Qt::ImEnabled) << keyEvent->value(Qt::ImHints);
+			}
+		}
+		if (QFocusEvent *focusEvent = dynamic_cast<QFocusEvent*>(event))
+		{
+			qDebug() << 2 << isSwitch;
+			if (focusEvent->reason() == Qt::ActiveWindowFocusReason && isSwitch && focusEvent->type() == QEvent::FocusOut)
+			{
+				focusEvent->ignore();
+				isSwitch = false;
+				return false;
+			}
+		}
+		return QStyledItemDelegate::eventFilter(object, event);
+	}
 };
 
 #endif // MAINWINDOW_H
