@@ -442,6 +442,7 @@ void MainWindow::createDictionaryView()
 		pTreeView->scrollTo(pTreeView->currentIndex());
 	});
 	pTreeView->setItemDelegateForColumn(DictionaryModel::RussiaColumn, new LineDelegate);
+	pTreeView->setItemDelegateForColumn(DictionaryModel::EnglishColumn, new LineDelegate);
 
 
 	/// Drag'n'Drop

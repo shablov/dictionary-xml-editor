@@ -1,7 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QDebug>
 #include <QLineEdit>
 #include <QMainWindow>
 #include <QStyledItemDelegate>
@@ -113,6 +112,8 @@ class LineDelegate : public QStyledItemDelegate
 public:
 	virtual QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 	{
+		Q_UNUSED(option);
+		Q_UNUSED(index);
 		return new QLineEdit(parent);
 	}
 	virtual void setEditorData(QWidget *editor, const QModelIndex &index) const
@@ -121,7 +122,6 @@ public:
 	}
 	virtual void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
 	{
-		qDebug() << Q_FUNC_INFO;
 		model->setData(index, editor->property("text"));
 	}
 
@@ -129,7 +129,6 @@ public:
 public:
 	virtual bool editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index)
 	{
-		qDebug() << event;
 		if (QFocusEvent *focusEvent = dynamic_cast<QFocusEvent*>(event))
 		{
 			if (focusEvent->reason() == Qt::ActiveWindowFocusReason)
@@ -146,18 +145,15 @@ public:
 	virtual bool eventFilter(QObject *object, QEvent *event)
 	{
 		static bool isSwitch = false;
-		qDebug() << event;
 		if (QInputMethodQueryEvent *keyEvent = dynamic_cast<QInputMethodQueryEvent*>(event))
 		{
 			if (keyEvent->queries() == 0x101)
 			{
 				isSwitch = true;
-				qDebug() << 1 << isSwitch << keyEvent->value(Qt::ImEnabled) << keyEvent->value(Qt::ImHints);
 			}
 		}
 		if (QFocusEvent *focusEvent = dynamic_cast<QFocusEvent*>(event))
 		{
-			qDebug() << 2 << isSwitch;
 			if (focusEvent->reason() == Qt::ActiveWindowFocusReason && isSwitch && focusEvent->type() == QEvent::FocusOut)
 			{
 				focusEvent->ignore();
