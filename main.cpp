@@ -1,4 +1,5 @@
-﻿#include "mainwindow.h"
+﻿#include "iconproxystyle.h"
+#include "mainwindow.h"
 #include <QApplication>
 #include <QTranslator>
 #include <QLibraryInfo>
@@ -30,6 +31,7 @@ int main(int argc, char *argv[])
 	}
 
 	MainWindow w;
+	w.setStyle(a.style());
 	w.show();
 
 	return a.exec();

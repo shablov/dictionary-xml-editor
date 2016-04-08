@@ -14,12 +14,17 @@
 #include <QCloseEvent>
 #include <QUndoStack>
 #include <QSettings>
+#include <QDialogButtonBox>
+#include <QPushButton>
+#include <QShortcut>
+#include <QApplication>
 
 #include "cutpasteitemcommand.h"
 #include "datachangedcommand.h"
 #include "dictionarysortfilterproxymodel.h"
 #include "extreeview.h"
 #include "headerview.h"
+#include "iconproxystyle.h"
 #include "insertitemcommand.h"
 #include "removeitemcommand.h"
 #include "updownitemcommand.h"
@@ -29,10 +34,10 @@
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
+	QIcon::setThemeName("material");
 	pUndoStack = new QUndoStack(this);
-
 	setWindowTitle(tr("Dictionary editor[*]"));
-	setWindowIcon(QIcon(":images/dictionary"));
+	setWindowIcon(QIcon::fromTheme("document-new"));
 	setMinimumWidth(600);
 	setMinimumHeight(400);
 
@@ -55,10 +60,18 @@ void MainWindow::createAction()
 
 void MainWindow::createFileActions()
 {
-	actionNewFile = new QAction(QIcon(":images/new_file"), tr("New file"), this);
-	actionOpenFile = new QAction(QIcon(":images/open_file"), tr("Open file"), this);
-	actionSaveFile = new QAction(QIcon(":images/save_file"), tr("Save file"), this);
-	actionSaveAs = new QAction(QIcon(":images/save_file"), tr("Save as ..."), this);
+	actionNewFile = new QAction(QIcon::fromTheme("document-new"),
+								tr("New file"),
+								this);
+	actionOpenFile = new QAction(QIcon::fromTheme("document-open"),
+								 tr("Open file"),
+								 this);
+	actionSaveFile = new QAction(QIcon::fromTheme("document-save"),
+								 tr("Save file"),
+								 this);
+	actionSaveAs = new QAction(QIcon::fromTheme("document-save"),
+							   tr("Save as ..."),
+							   this);
 
 	for (int i = 0; i < MaxRecentFiles; ++i)
 	{
@@ -99,8 +112,10 @@ void MainWindow::createFileActions()
 	connect(actionOpenFile, &QAction::triggered, [=] () {
 		if (maybeSave())
 		{
-			QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
-															QDir::currentPath(), tr("Xml (*.xml)"));
+			QString fileName = QFileDialog::getOpenFileName(this,
+															tr("Open File"),
+															QDir::currentPath(),
+															tr("Xml (*.xml)"));
 			loadFile(fileName);
 		}
 	});
@@ -114,14 +129,18 @@ void MainWindow::createItemsActions()
 	for (int i = 0; i < DictionaryItem::Invalid; i++)
 	{
 		QString actionName = DictionaryItem::ruTagNameForType(static_cast<DictionaryItem::ItemType>(i));
-		QAction *actionAdd =  new QAction(QIcon(":images/add_element"), tr("Add") + " " + actionName, this);
+		QAction *actionAdd =  new QAction(QIcon::fromTheme("list-add"),
+										  tr("Add") + " " + actionName,
+										  this);
 		actionAdd->setIconVisibleInMenu(true);
 		actionAdd->setData(i);
 		actionAdd->setVisible(false);
 		actionGroupAdd->addAction(actionAdd);
 	}
 
-	actionRemove = new QAction(QIcon(":images/remove_element"), tr("Remove"), this);
+	actionRemove = new QAction(QIcon::fromTheme("list-remove"),
+							   tr("Remove"),
+							   this);
 	actionRemove->setIconVisibleInMenu(true);
 	actionRemove->setShortcut(QKeySequence::Delete);
 
@@ -139,8 +158,8 @@ void MainWindow::createItemsActions()
 
 void MainWindow::createMoveActions()
 {
-	actionUp = new QAction(QIcon(":images/arrow_up"), tr("Up"), this);
-	actionDown = new QAction(QIcon(":images/arrow_down"), tr("Down"), this);
+	actionUp = new QAction(QIcon::fromTheme("go-up"), tr("Up"), this);
+	actionDown = new QAction(QIcon::fromTheme("go-down"), tr("Down"), this);
 
 	actionUp->setIconVisibleInMenu(true);
 	actionDown->setIconVisibleInMenu(true);
@@ -165,12 +184,18 @@ void MainWindow::createMoveActions()
 void MainWindow::createEditActions()
 {
 	actionUndo = pUndoStack->createUndoAction(this, tr("Undo"));
-	actionUndo->setIcon(QIcon(":images/undo"));
+	actionUndo->setIcon(QIcon::fromTheme("edit-undo"));
 	actionRedo = pUndoStack->createRedoAction(this, tr("Redo"));
-	actionRedo->setIcon(QIcon(":images/redo"));
-	actionCut = new QAction(QIcon(":images/cut"), tr("Cut"), this);
-	actionCopy = new QAction(QIcon(":images/copy"), tr("Copy"), this);
-	actionPaste = new QAction(QIcon(":images/paste"), tr("Paste"), this);
+	actionRedo->setIcon(QIcon::fromTheme("edit-redo"));
+	actionCut = new QAction(QIcon::fromTheme("edit-cut"),
+							tr("Cut"),
+							this);
+	actionCopy = new QAction(QIcon::fromTheme("edit-copy"),
+							 tr("Copy"),
+							 this);
+	actionPaste = new QAction(QIcon::fromTheme("edit-paste"),
+							  tr("Paste"),
+							  this);
 
 	actionCut->setShortcut(QKeySequence::Cut);
 	actionCopy->setShortcut(QKeySequence::Copy);
@@ -212,7 +237,9 @@ void MainWindow::createEditActions()
 
 void MainWindow::createSearchAction()
 {
-	actionSearch = new QAction(QIcon(":images/search"), tr("Search"), this);
+	actionSearch = new QAction(QIcon::fromTheme("system-search"),
+							   tr("Search"),
+							   this);
 	actionSearch->setIconVisibleInMenu(true);
 	actionSearch->setShortcut(QKeySequence::Find);
 }
@@ -236,7 +263,11 @@ void MainWindow::createFileMenu()
 		recentFilesMenu->addAction(recentFilesActions[i]);
 	}
 	fileMenu->addSeparator();
-	QAction *actionExit = fileMenu->addAction(QIcon(":images/exit"), tr("Exit"));
+
+	QAction *actionExit = new QAction(QIcon::fromTheme("application-exit"),
+									  tr("Exit"),
+									  this);
+	fileMenu->addAction(actionExit);
 	actionExit->setIconVisibleInMenu(true);
 	connect(actionExit, &QAction::triggered, this, &MainWindow::close);
 }
@@ -272,7 +303,8 @@ void MainWindow::createEditMenu()
 	editMenu->addMenu(menuAdd);
 	editMenu->addAction(actionRemove);
 
-	QMenu *moveMenu = editMenu->addMenu(QIcon(":images/drag_arrow"), tr("Move"));
+	QMenu *moveMenu = editMenu->addMenu(QIcon::fromTheme("vertical-move"),
+										tr("Move"));
 	moveMenu->addAction(actionUp);
 	moveMenu->addAction(actionDown);
 
@@ -285,7 +317,7 @@ void MainWindow::createEditMenu()
 void MainWindow::createAddMenu()
 {
 	menuAdd = new QMenu(tr("Add"), this);
-	menuAdd->setIcon(QIcon(":images/add_element"));
+	menuAdd->setIcon(QIcon::fromTheme("list-adds"));
 	menuAdd->addActions(actionGroupAdd->actions());
 }
 
@@ -334,7 +366,9 @@ void MainWindow::createItemsTool(QToolBar *toolBar)
 	menuAddButton->setIcon(menuAdd->icon());
 	menuAddButton->setPopupMode( QToolButton::InstantPopup);
 	menuAddButton->setMenu(menuAdd);
-	menuAddButton->setStyleSheet("QToolButton#menuAddButton{border-style: none}");
+	menuAddButton->setStyleSheet("QToolButton#menuAddButton {"
+								 "border-style: none;"
+								 "}");
 
 	toolBar->addWidget(menuAddButton);
 	toolBar->addAction(actionRemove);
@@ -462,23 +496,19 @@ bool MainWindow::maybeSave()
 	{
 		return true;
 	}
-	int buttonRole = QMessageBox::information(this, tr("Dictionary is modified"),
-											  tr("Do you want to save the changes you made to Dictionary?"),
-											  QMessageBox::Yes, QMessageBox::No, QMessageBox::Cancel);
-	switch (buttonRole)
+
+	int button = QMessageBox::warning(this,
+						 tr("Dictionary is modified"),
+						 tr("Do you want to save the changes you made to Dictionary?"),
+						 QMessageBox::Save |
+						 QMessageBox::Discard |
+						 QMessageBox::Cancel);
+	switch (button)
 	{
-		case QMessageBox::Yes:
-		{
-			return onSaveFile();
-		}
-		case QMessageBox::No:
-		{
-			return true;
-		}
-		default:
-		{
-			return false;
-		}
+		case QMessageBox::Save: return onSaveFile();
+		case QMessageBox::Discard: return true;
+		case QMessageBox::Cancel:
+		default: return false;
 	}
 }
 
@@ -531,7 +561,7 @@ bool MainWindow::onSaveAs()
 {
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
 													QDir::currentPath(), tr("Xml (*.xml)"));
-	return !fileName.isEmpty() ? saveToFile(fileName) : true;
+	return !fileName.isEmpty() ? saveToFile(fileName) : false;
 }
 
 bool MainWindow::saveToFile(const QString &fileName)

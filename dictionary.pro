@@ -29,7 +29,8 @@ SOURCES += main.cpp\
     itemcommand.cpp \
     updownitemcommand.cpp \
     cutpasteitemcommand.cpp \
-    dictionarysortfilterproxymodel.cpp
+    dictionarysortfilterproxymodel.cpp \
+    iconproxystyle.cpp
 
 HEADERS  += mainwindow.h \
     dictionarymodel.h \
@@ -42,9 +43,11 @@ HEADERS  += mainwindow.h \
     itemcommand.h \
     updownitemcommand.h \
     cutpasteitemcommand.h \
-    dictionarysortfilterproxymodel.h
+    dictionarysortfilterproxymodel.h \
+    iconproxystyle.h
 
 RESOURCES += \
-        resources.qrc
+	icons/material.qrc \
+    resource.qrc
 
 TRANSLATIONS += files/dictionary_ru.ts

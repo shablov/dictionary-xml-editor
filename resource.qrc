@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/images">
+        <file alias="argument">images/argument.png</file>
+        <file alias="context">images/context.png</file>
+        <file alias="enum">images/enum.png</file>
+        <file alias="string">images/string.png</file>
+    </qresource>
+    <qresource prefix="/files">
+        <file alias="xsd_schema">files/dict_schema.xsd</file>
+        <file>files/dict.xml</file>
+        <file>files/dictionary_ru.ts</file>
+        <file alias="dictionary_translator">files/dictionary_ru.qm</file>
+    </qresource>
+</RCC>

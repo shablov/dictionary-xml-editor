@@ -1,0 +1,24 @@
+<RCC>
+    <qresource prefix="/icons/material">
+        <file alias="index.theme">material/index.theme</file>
+        <file alias="scalable/go-up.svg">material/scalable/arrow-up-bold.svg</file>
+        <file alias="scalable/go-down.svg">material/scalable/arrow-down-bold.svg</file>
+        <file alias="scalable/document-open.svg">material/scalable/ic_folder_open_black_48px.svg</file>
+        <file alias="scalable/document-save.svg">material/scalable/ic_note_add_black_48px.svg</file>
+        <file alias="scalable/document-new.svg">material/scalable/ic_save_black_48px.svg</file>
+        <file alias="scalable/edit-copy.svg">material/scalable/ic_content_copy_black_48px.svg</file>
+        <file alias="scalable/edit-cut.svg">material/scalable/ic_content_cut_black_48px.svg</file>
+        <file alias="scalable/edit-paste.svg">material/scalable/ic_content_paste_black_48px.svg</file>
+        <file alias="scalable/application-exit.svg">material/scalable/ic_exit_to_app_black_48px.svg</file>
+        <file alias="scalable/list-remove.svg">material/scalable/ic_remove_black_48px.svg</file>
+        <file alias="scalable/list-add.svg">material/scalable/ic_add_black_48px.svg</file>
+        <file alias="scalable/edit-redo.svg">material/scalable/ic_redo_black_48px.svg</file>
+        <file alias="scalable/edit-undo.svg">material/scalable/ic_undo_black_48px.svg</file>
+        <file alias="scalable/system-search.svg">material/scalable/ic_search_black_48px.svg</file>
+        <file alias="scalable/vertical-move.svg">material/scalable/ic_swap_vert_black_48px.svg</file>
+        <file alias="scalable/list-adds.svg">material/scalable/ic_library_add_black_48px.svg</file>
+        <file alias="scalable/dialog-warning.svg">material/scalable/alert.svg</file>
+        <file alias="scalable/edit-delete.svg">material/scalable/ic_delete_forever_black_48px.svg</file>
+        <file alias="scalable/dialog-cancel.svg">material/scalable/ic_close_black_48px.svg</file>
+    </qresource>
+</RCC>

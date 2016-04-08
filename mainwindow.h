@@ -16,6 +16,7 @@ class QActionGroup;
 class QUndoStack;
 class ExTreeView;
 class DictionarySortFilterProxyModel;
+class IconProxyStyle;
 
 class MainWindow : public QMainWindow
 {
