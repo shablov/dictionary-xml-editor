@@ -16,7 +16,7 @@
         <file alias="scalable/edit-undo.svg">material/scalable/ic_undo_black_48px.svg</file>
         <file alias="scalable/system-search.svg">material/scalable/ic_search_black_48px.svg</file>
         <file alias="scalable/vertical-move.svg">material/scalable/ic_swap_vert_black_48px.svg</file>
-        <file alias="scalable/list-adds.svg">material/scalable/ic_library_add_black_48px.svg</file>
+        <file alias="scalable/insert-object.svg">material/scalable/ic_library_add_black_48px.svg</file>
         <file alias="scalable/dialog-warning.svg">material/scalable/alert.svg</file>
         <file alias="scalable/edit-delete.svg">material/scalable/ic_delete_forever_black_48px.svg</file>
         <file alias="scalable/dialog-cancel.svg">material/scalable/ic_close_black_48px.svg</file>

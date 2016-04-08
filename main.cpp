@@ -9,8 +9,13 @@ int main(int argc, char *argv[])
 {
 	QApplication a(argc, argv);
 	a.setStyle("Plastique");
+	QIcon::setThemeName("HighContrast");
 	QString translationsPath(QLibraryInfo::location(QLibraryInfo::TranslationsPath));
 	QLocale locale = QLocale::system();
+
+//	material
+//	gnome
+//	HighContrast
 
 	QTranslator qtTranslator;
 	if (qtTranslator.load(locale, "qt", "_", translationsPath))
@@ -31,7 +36,6 @@ int main(int argc, char *argv[])
 	}
 
 	MainWindow w;
-	w.setStyle(a.style());
 	w.show();
 
 	return a.exec();

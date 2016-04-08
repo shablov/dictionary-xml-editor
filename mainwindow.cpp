@@ -18,6 +18,7 @@
 #include <QPushButton>
 #include <QShortcut>
 #include <QApplication>
+#include <QTimer>
 
 #include "cutpasteitemcommand.h"
 #include "datachangedcommand.h"
@@ -34,7 +35,6 @@
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
-	QIcon::setThemeName("material");
 	pUndoStack = new QUndoStack(this);
 	setWindowTitle(tr("Dictionary editor[*]"));
 	setWindowIcon(QIcon::fromTheme("document-new"));
@@ -317,7 +317,7 @@ void MainWindow::createEditMenu()
 void MainWindow::createAddMenu()
 {
 	menuAdd = new QMenu(tr("Add"), this);
-	menuAdd->setIcon(QIcon::fromTheme("list-adds"));
+	menuAdd->setIcon(QIcon::fromTheme("insert-object"));
 	menuAdd->addActions(actionGroupAdd->actions());
 }
 
